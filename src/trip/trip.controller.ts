@@ -1,34 +1,76 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { TripService } from './trip.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
+import { Trip } from './entities/trip.entity';
+import { TripService } from './trip.service';
 
-@Controller('trip')
+@ApiTags('Trips')
+@Controller('trips')
 export class TripController {
   constructor(private readonly tripService: TripService) {}
 
+  @ApiCreatedResponse({ type: Trip })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Post()
-  create(@Body() createTripDto: CreateTripDto) {
-    return this.tripService.create(createTripDto);
+  async create(@Body() payload: CreateTripDto): Promise<Trip> {
+    return await this.tripService.create(payload);
   }
 
+  @ApiOkResponse({ type: Trip, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
-  findAll() {
-    return this.tripService.findAll();
+  async findAll(@Body() intercept: InterceptDto): Promise<Trip[]> {
+    return await this.tripService.findAll(intercept);
   }
 
+  @ApiOkResponse({ type: Trip })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tripService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Trip> {
+    return await this.tripService.findOne(id, intercept);
   }
 
+  @ApiOkResponse({ type: 'string' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto) {
-    return this.tripService.update(+id, updateTripDto);
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateTripDto,
+  ): Promise<string> {
+    return await this.tripService.update(id, payload);
   }
 
+  @ApiOkResponse({ type: 'string' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tripService.remove(+id);
+  async remove(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<string> {
+    return await this.tripService.remove(id, intercept);
   }
 }

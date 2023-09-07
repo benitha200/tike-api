@@ -7,7 +7,7 @@ import { Operator } from 'src/operator/entities/operator.entity';
 import Audit from 'src/shared/entities/audit.entity';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
-@Entity('locations')
+@Entity('trips')
 export class Trip extends Audit {
   @ApiProperty({ type: () => Location })
   @ManyToOne(() => Location, (location) => location.departure_trips, {
