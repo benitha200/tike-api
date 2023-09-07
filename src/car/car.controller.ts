@@ -45,23 +45,32 @@ export class CarController {
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  async findOne(@Param('id') id: string, @Body() intercept: InterceptDto) {
+  async findOne(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Car> {
     return await this.carService.findOne(id, intercept);
   }
 
-  @ApiOkResponse({ type: 'Car' })
+  @ApiOkResponse({ type: 'string' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() payload: UpdateCarDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateCarDto,
+  ): Promise<string> {
     return await this.carService.update(id, payload);
   }
 
-  @ApiOkResponse({ type: 'Car' })
+  @ApiOkResponse({ type: 'string' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
-  async remove(@Param('id') id: string, @Body() intercept: InterceptDto) {
+  async remove(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<string> {
     return await this.carService.remove(id, intercept);
   }
 }
