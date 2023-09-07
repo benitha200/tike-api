@@ -8,15 +8,15 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 export class Booking extends Audit {
   @ApiProperty()
   @Column()
-  price: string;
+  price: number;
 
   @ApiProperty({ default: true })
   @Column({ default: true })
   is_one_way: boolean;
 
-  @ApiProperty({ type: 'longtext' })
-  @Column({ type: 'longtext' })
-  notes: string;
+  @ApiProperty({ type: 'longtext', nullable: true })
+  @Column({ type: 'longtext', nullable: true })
+  notes?: string;
 
   @ApiProperty({ type: () => Trip })
   @ManyToOne(() => Trip, (trip) => trip.bookings, {
@@ -29,4 +29,8 @@ export class Booking extends Audit {
     onDelete: 'SET NULL',
   })
   traveler: Traveler;
+
+  @ApiProperty({ default: false })
+  @Column({ default: false })
+  canceled: boolean;
 }

@@ -1,34 +1,67 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto } from './dto/update-booking.dto';
+import { Booking } from './entities/booking.entity';
 
-@Controller('booking')
+@ApiTags('Bookings')
+@Controller('bookings')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
+  @ApiCreatedResponse({ type: Booking })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Post()
-  create(@Body() createBookingDto: CreateBookingDto) {
-    return this.bookingService.create(createBookingDto);
+  async create(@Body() payload: CreateBookingDto): Promise<Booking> {
+    return await this.bookingService.create(payload);
   }
 
+  @ApiOkResponse({ type: Booking, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
-  findAll() {
-    return this.bookingService.findAll();
+  async findAll(
+    @Query('traveler') traveler: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Booking[]> {
+    return await this.bookingService.findAll(traveler, intercept);
   }
 
+  @ApiOkResponse({ type: Booking })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookingService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Booking> {
+    return await this.bookingService.findOne(id, intercept);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBookingDto: UpdateBookingDto) {
-    return this.bookingService.update(+id, updateBookingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bookingService.remove(+id);
+  @ApiOkResponse({ type: 'string' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @Patch(':id/cancel')
+  async update(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<string> {
+    return await this.bookingService.cancel(id, intercept);
   }
 }
