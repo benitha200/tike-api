@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { generateCode } from 'src/shared/utils/functions.utils';
@@ -86,14 +81,6 @@ export class OperatorService {
   }
 
   async update(id: string, payload: UpdateOperatorDto): Promise<string> {
-    if (payload.user.operator) {
-      if (id !== payload.user.operator.id) {
-        throw new UnauthorizedException(
-          'You are not allowed to delete this user!',
-        );
-      }
-    }
-
     const {
       name,
       logo_url,
