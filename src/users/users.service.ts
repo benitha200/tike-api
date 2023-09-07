@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { Operator } from 'src/operator/entities/operator.entity';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
+import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { DataSource, Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -16,6 +18,10 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Traveler)
+    private readonly travelerRepository: Repository<Traveler>,
+    @InjectRepository(Operator)
+    private readonly operatorRepository: Repository<Operator>,
     private dataSource: DataSource,
   ) {}
 
@@ -25,52 +31,17 @@ export class UsersService {
     shelf?: string,
   ): Promise<User> {
     try {
-      let user = null;
-
-      switch (shelf) {
-        case 'favorites':
-          user = await this.userRepository
-            .createQueryBuilder('users')
-            .leftJoinAndSelect('users.favorites', 'favorites')
-            .leftJoinAndSelect('favorites.book', 'books')
-            .where('users.id = :id', {
-              id,
-            })
-            .andWhere('users.identifier = :identifier', {
-              identifier: intercept.user.identifier,
-            })
-            .getOne();
-          break;
-        case 'continue-reading':
-          console.log('continue-reading');
-          break;
-        case 'badges':
-          user = await this.userRepository
-            .createQueryBuilder('users')
-            .leftJoinAndSelect('users.activities', 'activities')
-            .where('users.id = :id', {
-              id,
-            })
-            .andWhere('users.identifier = :identifier', {
-              identifier: intercept.user.identifier,
-            })
-            .getOne();
-          break;
-
-        default:
-          user = await this.userRepository
-            .createQueryBuilder('users')
-            .leftJoinAndSelect('users.favorites', 'favorites')
-            .leftJoinAndSelect('users.activities', 'activities')
-            .where('users.id = :id', {
-              id,
-            })
-            .andWhere('users.identifier = :identifier', {
-              identifier: intercept.user.identifier,
-            })
-            .getOne();
-          break;
-      }
+      let user = await this.userRepository
+        .createQueryBuilder('users')
+        .leftJoinAndSelect('users.traveler', 'travelers')
+        .leftJoinAndSelect('users.operator', 'operators')
+        .where('users.id = :id', {
+          id,
+        })
+        .andWhere('users.identifier = :identifier', {
+          identifier: intercept.user.identifier,
+        })
+        .getOne();
 
       return user;
     } catch (error) {
@@ -82,9 +53,31 @@ export class UsersService {
   }
 
   async update(id: string, payload: UpdateUserDto): Promise<string> {
-    const { identifier, fullname, dob, gender, picture_url, level } = payload;
+    const {
+      fullname,
+      identifier,
+      password,
+      nationality,
+      dob,
+      gender,
+      phone_number,
+      email,
+      tax_id,
+      emergency_contact_name,
+      emergency_contact_email,
+      emergency_contact_phone_number,
+      operator_code,
+    } = payload;
     if (id !== payload.user.id) {
       throw new UnauthorizedException('You are not allowed to edit this user!');
+    }
+
+    let operator = null;
+    if (operator_code) {
+      operator = await this.operatorRepository
+        .createQueryBuilder('operators')
+        .where('code = :operator_code', { operator_code })
+        .getOne();
     }
 
     try {
@@ -94,9 +87,31 @@ export class UsersService {
         .set({
           identifier,
           fullname,
+          password,
+          operator,
         })
         .where('id = :id', { id })
         .execute();
+
+      if (payload.user.traveler) {
+        await this.travelerRepository
+          .createQueryBuilder()
+          .update(Traveler)
+          .set({
+            fullname,
+            nationality,
+            dob,
+            gender,
+            phone_number,
+            email,
+            tax_id,
+            emergency_contact_name,
+            emergency_contact_email,
+            emergency_contact_phone_number,
+          })
+          .where('id = :id', { id })
+          .execute();
+      }
 
       return 'Profile updated successfully!';
     } catch (error) {
@@ -116,7 +131,7 @@ export class UsersService {
 
     try {
       await this.userRepository
-        .createQueryBuilder()
+        .createQueryBuilder('users')
         .softDelete()
         .where('id = :id', { id })
         .execute();

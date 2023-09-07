@@ -3,7 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Operator } from 'src/operator/entities/operator.entity';
 import { Token } from 'src/shared/entities/token.entity';
+import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersModule } from 'src/users/users.module';
 import { AuthController } from './auth.controller';
@@ -12,7 +14,7 @@ import { LocalAuthStrategy } from './utils/local-auth.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Token]),
+    TypeOrmModule.forFeature([User, Token, Traveler, Operator]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

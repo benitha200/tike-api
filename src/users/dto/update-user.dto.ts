@@ -9,17 +9,35 @@ export class UpdateUserDto extends InterceptDto {
   identifier?: string;
 
   @ApiPropertyOptional()
-  picture?: string;
+  password?: string;
 
   @ApiPropertyOptional()
-  dob?: Date;
+  nationality?: string;
+
+  @ApiPropertyOptional()
+  dob?: string;
 
   @ApiPropertyOptional()
   gender?: string;
 
   @ApiPropertyOptional()
-  picture_url?: string;
+  phone_number?: string;
 
   @ApiPropertyOptional()
-  level?: string;
+  email?: string;
+
+  @ApiPropertyOptional()
+  tax_id?: string;
+
+  @ApiPropertyOptional()
+  emergency_contact_name?: string;
+
+  @ApiPropertyOptional()
+  emergency_contact_email?: string;
+
+  @ApiPropertyOptional()
+  emergency_contact_phone_number?: string;
+
+  @ApiPropertyOptional()
+  operator_code?: string;
 }

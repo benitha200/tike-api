@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -27,8 +34,9 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() payload: RegisterRequestDto,
+    @Param('type') type: string,
   ): Promise<AuthResponseDto> {
-    return await this.authService.register(payload);
+    return await this.authService.register(payload, type);
   }
 
   @ApiOkResponse()

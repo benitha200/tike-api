@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Token } from 'src/shared/entities/token.entity';
 import { generateRandomToken } from 'src/shared/utils/functions.utils';
+import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { User } from 'src/users/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuidV4 } from 'uuid';
@@ -96,19 +97,17 @@ export class AuthService {
     }
   }
 
-  async register(payload: RegisterRequestDto): Promise<AuthResponseDto> {
+  async register(
+    payload: RegisterRequestDto,
+    type: string,
+  ): Promise<AuthResponseDto> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       let newUserInfo = await this.userRepository.findOne({
-        where: [
-          { identifier: payload.identifier },
-          {
-            idempotency_key: payload.idempotency_key,
-          },
-        ],
+        where: [{ identifier: payload.identifier }],
       });
 
       if (newUserInfo !== null) {
@@ -119,16 +118,31 @@ export class AuthService {
         }
       }
 
+      let newTraveler: Traveler = null;
+      if (type == 'traveler') {
+        newTraveler = new Traveler();
+        newTraveler.idempotency_key = payload.idempotency_key;
+        newTraveler.fullname = payload.fullname;
+        newTraveler.email = payload.identifier;
+        newTraveler = await queryRunner.manager.save(newTraveler);
+      }
+
       if (newUserInfo === null) newUserInfo = new User();
       newUserInfo.idempotency_key = payload.idempotency_key;
       newUserInfo.identifier = payload.identifier;
       newUserInfo.fullname = payload.fullname;
       newUserInfo.password = await bcrypt.hash(payload.password, 10);
+      type == 'traveler' ? (newUserInfo.traveler = newTraveler) : null;
       newUserInfo = await queryRunner.manager.save(newUserInfo);
 
       await queryRunner.commitTransaction();
 
-      return await this.generateJwt(newUserInfo);
+      let userInfo = await this.userRepository.findOne({
+        where: { identifier: payload.identifier },
+        relations: { operator: true, traveler: true },
+      });
+
+      return await this.generateJwt(userInfo);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(
@@ -148,6 +162,7 @@ export class AuthService {
     try {
       let userInfo = await this.userRepository.findOne({
         where: { identifier: payload.identifier },
+        relations: { operator: true, traveler: true },
       });
 
       if (userInfo === null) {
@@ -240,6 +255,7 @@ export class AuthService {
 
       let userInfo = await this.userRepository.findOne({
         where: { identifier: payload.identifier },
+        relations: { operator: true, traveler: true },
       });
 
       const password = await bcrypt.hash(payload.password, 10);
