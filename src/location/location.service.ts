@@ -79,7 +79,7 @@ export class LocationService {
         .where('id = :id', { id })
         .execute();
 
-      return 'Updated location successfully!';
+      return 'Updated Location successfully!';
     } catch (error) {
       throw new HttpException(
         error.message,
@@ -96,7 +96,7 @@ export class LocationService {
         .where('id = :id', { id })
         .execute();
 
-      return 'location deleted successfully!';
+      return 'Location deleted successfully!';
     } catch (error) {
       throw new HttpException(
         error.message,

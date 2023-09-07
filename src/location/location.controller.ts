@@ -52,7 +52,7 @@ export class LocationController {
     return await this.locationService.findOne(id, intercept);
   }
 
-  @ApiOkResponse({ type: 'Location' })
+  @ApiOkResponse({ type: 'string' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Patch(':id')
@@ -63,7 +63,7 @@ export class LocationController {
     return await this.locationService.update(id, payload);
   }
 
-  @ApiOkResponse({ type: 'Location' })
+  @ApiOkResponse({ type: 'string' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
