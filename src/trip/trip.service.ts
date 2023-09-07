@@ -1,9 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Car } from 'src/car/entities/car.entity';
-import { Driver } from 'src/driver/entities/driver.entity';
-import { Location } from 'src/location/entities/location.entity';
-import { Operator } from 'src/operator/entities/operator.entity';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { DataSource, Repository } from 'typeorm';
 import { CreateTripDto } from './dto/create-trip.dto';
@@ -15,14 +11,6 @@ export class TripService {
   constructor(
     @InjectRepository(Trip)
     private readonly tripRepository: Repository<Trip>,
-    @InjectRepository(Car)
-    private readonly carRepository: Repository<Car>,
-    @InjectRepository(Location)
-    private readonly locationRepository: Repository<Location>,
-    @InjectRepository(Driver)
-    private readonly driverRepository: Repository<Driver>,
-    @InjectRepository(Operator)
-    private readonly operatorRepository: Repository<Operator>,
     private dataSource: DataSource,
   ) {}
 
@@ -124,7 +112,7 @@ export class TripService {
         .where('id = :id', { id })
         .execute();
 
-      return 'Updated location successfully!';
+      return 'Updated Trip successfully!';
     } catch (error) {
       throw new HttpException(
         error.message,
