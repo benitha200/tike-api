@@ -136,14 +136,6 @@ export class OperatorService {
   }
 
   async remove(id: string, intercept: InterceptDto): Promise<string> {
-    if (intercept.user.operator) {
-      if (id !== intercept.user.operator.id) {
-        throw new UnauthorizedException(
-          'You are not allowed to delete this user!',
-        );
-      }
-    }
-
     try {
       await this.operatorRepository
         .createQueryBuilder('operators')

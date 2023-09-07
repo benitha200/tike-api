@@ -3,8 +3,8 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -34,7 +34,7 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() payload: RegisterRequestDto,
-    @Param('type') type: string,
+    @Query('type') type: string,
   ): Promise<AuthResponseDto> {
     return await this.authService.register(payload, type);
   }
