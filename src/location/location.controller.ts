@@ -1,34 +1,76 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { LocationService } from './location.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Location } from 'src/location/entities/location.entity';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { LocationService } from './location.service';
 
-@Controller('location')
+@ApiTags('Locations')
+@Controller('locations')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
+  @ApiCreatedResponse({ type: Location })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Post()
-  create(@Body() createLocationDto: CreateLocationDto) {
-    return this.locationService.create(createLocationDto);
+  async create(@Body() payload: CreateLocationDto): Promise<Location> {
+    return await this.locationService.create(payload);
   }
 
+  @ApiOkResponse({ type: Location, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
-  findAll() {
-    return this.locationService.findAll();
+  async findAll(@Body() intercept: InterceptDto): Promise<Location[]> {
+    return await this.locationService.findAll(intercept);
   }
 
+  @ApiOkResponse({ type: Location })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.locationService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Location> {
+    return await this.locationService.findOne(id, intercept);
   }
 
+  @ApiOkResponse({ type: 'Location' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLocationDto: UpdateLocationDto) {
-    return this.locationService.update(+id, updateLocationDto);
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateLocationDto,
+  ): Promise<string> {
+    return await this.locationService.update(id, payload);
   }
 
+  @ApiOkResponse({ type: 'Location' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.locationService.remove(+id);
+  async remove(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<string> {
+    return await this.locationService.remove(id, intercept);
   }
 }

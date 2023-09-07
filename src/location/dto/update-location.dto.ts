@@ -1,4 +1,13 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateLocationDto } from './create-location.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
 
-export class UpdateLocationDto extends PartialType(CreateLocationDto) {}
+export class UpdateLocationDto extends InterceptDto {
+  @ApiPropertyOptional()
+  name: string;
+
+  @ApiPropertyOptional()
+  city: string;
+
+  @ApiPropertyOptional()
+  country: string;
+}
