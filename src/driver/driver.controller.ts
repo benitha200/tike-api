@@ -1,34 +1,76 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { Driver } from './entities/driver.entity';
 
-@Controller('driver')
+@ApiTags('Drivers')
+@Controller('drivers')
 export class DriverController {
   constructor(private readonly driverService: DriverService) {}
 
+  @ApiCreatedResponse({ type: Driver })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Post()
-  create(@Body() createDriverDto: CreateDriverDto) {
-    return this.driverService.create(createDriverDto);
+  async create(@Body() payload: CreateDriverDto): Promise<Driver> {
+    return await this.driverService.create(payload);
   }
 
+  @ApiOkResponse({ type: Driver, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
-  findAll() {
-    return this.driverService.findAll();
+  async findAll(@Body() intercept: InterceptDto): Promise<Driver[]> {
+    return await this.driverService.findAll(intercept);
   }
 
+  @ApiOkResponse({ type: Driver })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.driverService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Driver> {
+    return await this.driverService.findOne(id, intercept);
   }
 
+  @ApiOkResponse({ type: 'string' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDriverDto: UpdateDriverDto) {
-    return this.driverService.update(+id, updateDriverDto);
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateDriverDto,
+  ): Promise<string> {
+    return await this.driverService.update(id, payload);
   }
 
+  @ApiOkResponse({ type: 'string' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.driverService.remove(+id);
+  async remove(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<string> {
+    return await this.driverService.remove(id, intercept);
   }
 }
