@@ -1,34 +1,46 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
+import { Traveler } from './entities/traveler.entity';
 import { TravelerService } from './traveler.service';
-import { CreateTravelerDto } from './dto/create-traveler.dto';
-import { UpdateTravelerDto } from './dto/update-traveler.dto';
 
-@Controller('traveler')
+@ApiTags('Travelers')
+@Controller('travelers')
 export class TravelerController {
   constructor(private readonly travelerService: TravelerService) {}
 
-  @Post()
-  create(@Body() createTravelerDto: CreateTravelerDto) {
-    return this.travelerService.create(createTravelerDto);
-  }
-
+  @ApiOkResponse({ type: Traveler, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
-  findAll() {
-    return this.travelerService.findAll();
+  async findAll(@Body() intercept: InterceptDto): Promise<Traveler[]> {
+    return await this.travelerService.findAll(intercept);
   }
 
+  @ApiOkResponse({ type: Traveler })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.travelerService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<Traveler> {
+    return await this.travelerService.findOne(id, intercept);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTravelerDto: UpdateTravelerDto) {
-    return this.travelerService.update(+id, updateTravelerDto);
-  }
-
+  @ApiOkResponse({ type: 'string' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.travelerService.remove(+id);
+  async remove(
+    @Param('id') id: string,
+    @Body() intercept: InterceptDto,
+  ): Promise<string> {
+    return await this.travelerService.remove(id, intercept);
   }
 }

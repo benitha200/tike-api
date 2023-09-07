@@ -27,6 +27,10 @@ export class Traveler extends Audit {
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
+  email?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
   tax_id?: string;
 
   @ApiProperty({ nullable: true })

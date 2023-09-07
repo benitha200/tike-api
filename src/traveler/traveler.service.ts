@@ -1,26 +1,60 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTravelerDto } from './dto/create-traveler.dto';
-import { UpdateTravelerDto } from './dto/update-traveler.dto';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
+import { DataSource, Repository } from 'typeorm';
+import { Traveler } from './entities/traveler.entity';
 
 @Injectable()
 export class TravelerService {
-  create(createTravelerDto: CreateTravelerDto) {
-    return 'This action adds a new traveler';
+  constructor(
+    @InjectRepository(Traveler)
+    private readonly travelerRepository: Repository<Traveler>,
+    private dataSource: DataSource,
+  ) {}
+
+  async findAll(intercept: InterceptDto): Promise<Traveler[]> {
+    try {
+      return await this.travelerRepository
+        .createQueryBuilder('travelers')
+        .getMany();
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  findAll() {
-    return `This action returns all traveler`;
+  async findOne(id: string, intercept: InterceptDto): Promise<Traveler> {
+    try {
+      return await this.travelerRepository
+        .createQueryBuilder('travelers')
+        .where('travelers.id = :id', {
+          id,
+        })
+        .getOne();
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} traveler`;
-  }
+  async remove(id: string, intercept: InterceptDto): Promise<string> {
+    try {
+      await this.travelerRepository
+        .createQueryBuilder('travelers')
+        .softDelete()
+        .where('id = :id', { id })
+        .execute();
 
-  update(id: number, updateTravelerDto: UpdateTravelerDto) {
-    return `This action updates a #${id} traveler`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} traveler`;
+      return 'Operator deleted successfully!';
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
