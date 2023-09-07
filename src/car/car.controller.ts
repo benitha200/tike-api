@@ -1,34 +1,67 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { CarService } from './car.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
+import { Car } from './entities/car.entity';
 
-@Controller('car')
+@ApiTags('Cars')
+@Controller('cars')
 export class CarController {
   constructor(private readonly carService: CarService) {}
 
+  @ApiCreatedResponse({ type: Car })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Post()
-  create(@Body() createCarDto: CreateCarDto) {
-    return this.carService.create(createCarDto);
+  async create(@Body() payload: CreateCarDto): Promise<Car> {
+    return await this.carService.create(payload);
   }
 
+  @ApiOkResponse({ type: Car, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
-  findAll() {
-    return this.carService.findAll();
+  async findAll(@Body() intercept: InterceptDto): Promise<Car[]> {
+    return await this.carService.findAll(intercept);
   }
 
+  @ApiOkResponse({ type: Car })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.carService.findOne(+id);
+  async findOne(@Param('id') id: string, @Body() intercept: InterceptDto) {
+    return await this.carService.findOne(id, intercept);
   }
 
+  @ApiOkResponse({ type: 'Car' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCarDto: UpdateCarDto) {
-    return this.carService.update(+id, updateCarDto);
+  async update(@Param('id') id: string, @Body() payload: UpdateCarDto) {
+    return await this.carService.update(id, payload);
   }
 
+  @ApiOkResponse({ type: 'Car' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.carService.remove(+id);
+  async remove(@Param('id') id: string, @Body() intercept: InterceptDto) {
+    return await this.carService.remove(id, intercept);
   }
 }
