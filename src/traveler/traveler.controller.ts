@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param,Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
   ApiTags,
@@ -8,11 +9,20 @@ import {
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { Traveler } from './entities/traveler.entity';
 import { TravelerService } from './traveler.service';
+import { CreateTravelerDTO } from './dto/create-traveler.dto';
 
 @ApiTags('Travelers')
 @Controller('travelers')
 export class TravelerController {
   constructor(private readonly travelerService: TravelerService) {}
+
+  @ApiCreatedResponse({ type: Traveler })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @Post()
+  async create(@Body() payload: CreateTravelerDTO): Promise<Traveler> {
+    return await this.travelerService.create(payload);
+  }
 
   @ApiOkResponse({ type: Traveler, isArray: true })
   @ApiForbiddenResponse({ description: 'Forbidden' })

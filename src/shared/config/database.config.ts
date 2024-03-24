@@ -9,7 +9,7 @@ export const databaseConfig: TypeOrmModuleOptions = {
   port: 3306,
   database: 'tike',
   username: 'root',
-  password: '123login',
+  password: 'pass',
   entities: ['dist/**/*.entity.js'],
   migrations: ['dist/src/db/migrations/*.js'],
   migrationsTableName: 'migrations',
