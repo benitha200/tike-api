@@ -54,7 +54,7 @@ import { BookingModule } from './booking/booking.module';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: LocalAuthGuard },
+    // { provide: APP_GUARD, useClass: LocalAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })

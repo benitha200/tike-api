@@ -20,6 +20,7 @@ export class TravelerService {
 
     try {
       let newTraveler = new Traveler();
+      newTraveler.idempotency_key = payload.idempotency_key;
       newTraveler.fullname = payload.fullname;
       newTraveler.nationality = payload.nationality;
       newTraveler.dob = payload.dob;

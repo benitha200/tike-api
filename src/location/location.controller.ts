@@ -30,7 +30,7 @@ export class LocationController {
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Post()
   async create(@Body() payload: CreateLocationDto): Promise<Location> {
-    return await this.locationService.create(payload);
+    return this.locationService.create(payload);
   }
 
   @ApiOkResponse({ type: Location, isArray: true })
@@ -38,7 +38,7 @@ export class LocationController {
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get()
   async findAll(@Body() intercept: InterceptDto): Promise<Location[]> {
-    return await this.locationService.findAll(intercept);
+    return this.locationService.findAll(intercept);
   }
 
   @ApiOkResponse({ type: Location })
@@ -49,7 +49,7 @@ export class LocationController {
     @Param('id') id: string,
     @Body() intercept: InterceptDto,
   ): Promise<Location> {
-    return await this.locationService.findOne(id, intercept);
+    return this.locationService.findOne(id, intercept);
   }
 
   @ApiOkResponse({ type: 'string' })
@@ -60,7 +60,7 @@ export class LocationController {
     @Param('id') id: string,
     @Body() payload: UpdateLocationDto,
   ): Promise<string> {
-    return await this.locationService.update(id, payload);
+    return this.locationService.update(id, payload);
   }
 
   @ApiOkResponse({ type: 'string' })
@@ -71,6 +71,6 @@ export class LocationController {
     @Param('id') id: string,
     @Body() intercept: InterceptDto,
   ): Promise<string> {
-    return await this.locationService.remove(id, intercept);
+    return this.locationService.remove(id, intercept);
   }
 }

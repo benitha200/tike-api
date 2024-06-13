@@ -1,8 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 
 export class CreateTravelerDTO extends InterceptDto {
+  @ApiProperty()
+  @IsNotEmpty()
+  idempotency_key: string;
+
   @ApiProperty()
   @IsNotEmpty()
   fullname: string;
@@ -27,23 +31,18 @@ export class CreateTravelerDTO extends InterceptDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiPropertyOptional()
   tax_id: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiPropertyOptional()
   emergency_contact_name: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiPropertyOptional()
   emergency_contact_email: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiPropertyOptional()
   emergency_contact_phone_number: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiPropertyOptional()
   bookings: [];
 }
