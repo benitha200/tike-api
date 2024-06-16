@@ -16,6 +16,10 @@ export class User extends Audit {
   identifier: string;
 
   @ApiProperty()
+  @Column({default:"operator"})
+  role: string;
+
+  @ApiProperty()
   @Exclude()
   @Column()
   password: string;

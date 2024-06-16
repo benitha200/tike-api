@@ -16,6 +16,10 @@ export class RegisterRequestDto {
 
   @ApiProperty()
   @IsNotEmpty()
+  role: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
   password: string;
 }
 
