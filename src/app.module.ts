@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { LocalAuthGuard } from './auth/utils/local-auth.guard';
+// import { LocalAuthGuard } from './auth/utils/local-auth.guard';
 import appConfig from './shared/config/app.config';
 import authConfig from './shared/config/auth.config';
 import { databaseConfig } from './shared/config/database.config';
