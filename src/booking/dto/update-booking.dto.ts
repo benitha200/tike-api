@@ -15,4 +15,7 @@ export class UpdateBookingDto extends InterceptDto {
 
   @ApiPropertyOptional()
   traveler?: Traveler;
+
+  @ApiPropertyOptional()
+  payment_status?: boolean;
 }

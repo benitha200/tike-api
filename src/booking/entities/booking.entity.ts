@@ -33,4 +33,8 @@ export class Booking extends Audit {
   @ApiProperty({ default: false })
   @Column({ default: false })
   canceled: boolean;
+
+  @ApiProperty({ default: false })
+  @Column({ default: false })
+  payment_status: boolean;
 }

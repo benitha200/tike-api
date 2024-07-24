@@ -23,4 +23,8 @@ export class CreateBookingDto extends InterceptDto {
   @ApiProperty()
   @IsNotEmpty()
   traveler: Traveler;
+
+
+  @ApiPropertyOptional()
+  payment_status: boolean;
 }
