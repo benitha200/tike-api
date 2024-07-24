@@ -127,7 +127,7 @@ async function bootstrap() {
       'https://55f5-2c0f-eb68-625-c000-f497-b2a9-4198-66da.ngrok-free.app/',
       'https://7877-105-179-7-106.ngrok-free.app',
       'https://api.tike.rw',
-      'https://api.tike.rw'
+      'https://operator.tike.rw'
     ], // Allow these origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
