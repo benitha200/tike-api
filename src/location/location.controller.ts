@@ -19,6 +19,7 @@ import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationService } from './location.service';
+import { Public } from 'src/auth/utils/local-auth.decorator';
 
 @ApiTags('Locations')
 @Controller('locations')
@@ -33,6 +34,7 @@ export class LocationController {
     return this.locationService.create(payload);
   }
 
+  @Public()
   @ApiOkResponse({ type: Location, isArray: true })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })

@@ -118,20 +118,22 @@ async function bootstrap() {
   app.use(helmet());
 
   // Enable and configure CORS for multiple origins
-  app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'http://localhost:3011',
-      'https://55f5-2c0f-eb68-625-c000-f497-b2a9-4198-66da.ngrok-free.app/',
-      'https://7877-105-179-7-106.ngrok-free.app',
-      'https://api.tike.rw',
-      'https://operator.tike.rw'
-    ], // Allow these origins
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-  });
+  app.enableCors(
+  // {
+  //   origin: [
+  //     'http://localhost:3000',
+  //     'http://localhost:3001',
+  //     'http://localhost:3002',
+  //     'http://localhost:3011',
+  //     'https://55f5-2c0f-eb68-625-c000-f497-b2a9-4198-66da.ngrok-free.app/',
+  //     'https://7877-105-179-7-106.ngrok-free.app',
+  //     'https://api.tike.rw',
+  //     'https://operator.tike.rw'
+  //   ], // Allow these origins
+  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
+  //   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  // }
+);
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
