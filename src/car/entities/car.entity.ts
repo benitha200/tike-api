@@ -26,6 +26,10 @@ export class Car extends Audit {
   @Column()
   type: string;
 
+  @ApiProperty()
+  @Column()
+  number_of_seats:number;
+
   @ApiProperty({ type: () => CarMetadata, isArray: true })
   @OneToMany(() => CarMetadata, (metadata) => metadata.car)
   metadata: CarMetadata[];

@@ -15,6 +15,13 @@ export class CreateCarDto extends InterceptDto {
   @IsNotEmpty()
   immatriculation_no: string;
 
+  
+  @ApiProperty()
+  @IsNotEmpty()
+  number_of_seats: number;
+
+
+
   @ApiProperty()
   @IsNotEmpty()
   brand: string;

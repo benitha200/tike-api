@@ -27,6 +27,7 @@ export class CarService {
       newCar.brand = payload.brand;
       newCar.model = payload.model;
       newCar.type = payload.type;
+      newCar.number_of_seats = payload.number_of_seats;
       newCar = await queryRunner.manager.save(newCar);
 
       await queryRunner.commitTransaction();
@@ -70,13 +71,13 @@ export class CarService {
   }
 
   async update(id: string, payload: UpdateCarDto): Promise<string> {
-    const { car_no, immatriculation_no, brand, model, type } = payload;
+    const { car_no, immatriculation_no,number_of_seats, brand, model, type } = payload;
 
     try {
       await this.carRepository
         .createQueryBuilder()
         .update(Car)
-        .set({ car_no, immatriculation_no, brand, model, type })
+        .set({ car_no, immatriculation_no,number_of_seats, brand, model, type })
         .where('id = :id', { id })
         .execute();
 

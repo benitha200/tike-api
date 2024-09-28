@@ -15,5 +15,8 @@ export class UpdateCarDto extends InterceptDto {
   model?: string;
 
   @ApiPropertyOptional()
+  number_of_seats?: number;
+
+  @ApiPropertyOptional()
   type?: string;
 }
