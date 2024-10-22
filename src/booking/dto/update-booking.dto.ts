@@ -17,5 +17,8 @@ export class UpdateBookingDto extends InterceptDto {
   traveler?: Traveler;
 
   @ApiPropertyOptional()
-  payment_status?: boolean;
+  payment_status?: 'PENDING' | 'PAID' | 'FAILED';
+
+  @ApiPropertyOptional()
+  payment_reference?: string;
 }

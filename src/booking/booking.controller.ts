@@ -18,11 +18,12 @@ import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './entities/booking.entity';
+import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
 export class BookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(private readonly bookingService: BookingService) { }
 
   @ApiCreatedResponse({ type: Booking })
   @ApiForbiddenResponse({ description: 'Forbidden' })
@@ -63,5 +64,16 @@ export class BookingController {
     @Body() intercept: InterceptDto,
   ): Promise<string> {
     return await this.bookingService.cancel(id, intercept);
+  }
+  @ApiOkResponse({ type: Booking })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @Patch(':id/payment')
+  async updatePaymentStatus(
+    @Param('id') id: string,
+    @Body() updateBookingDto: UpdateBookingDto
+    ,
+  ): Promise<Booking> {
+    return await this.bookingService.updatePaymentStatus(id, updateBookingDto.payment_status);
   }
 }

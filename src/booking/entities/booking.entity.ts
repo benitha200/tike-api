@@ -36,5 +36,9 @@ export class Booking extends Audit {
 
   @ApiProperty({ default: false })
   @Column({ default: false })
-  payment_status: boolean;
+  payment_status: string;
+
+
+  @Column({ nullable: true })
+  payment_reference: string;
 }

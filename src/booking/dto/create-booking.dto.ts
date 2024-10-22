@@ -26,5 +26,8 @@ export class CreateBookingDto extends InterceptDto {
 
 
   @ApiPropertyOptional()
-  payment_status: boolean;
+  payment_status: string;
+
+  @ApiPropertyOptional()
+  payment_reference: string;
 }
