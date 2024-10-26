@@ -19,6 +19,7 @@ import { LocationModule } from './location/location.module';
 import { TripModule } from './trip/trip.module';
 import { TravelerModule } from './traveler/traveler.module';
 import { BookingModule } from './booking/booking.module';
+import {PaymentModule} from './payment/payment.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { BookingModule } from './booking/booking.module';
     TripModule,
     TravelerModule,
     BookingModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

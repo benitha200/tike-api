@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Payment } from 'src/payment/entities/payment.entity';
 import Audit from 'src/shared/entities/audit.entity';
 import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany,CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('bookings')
 export class Booking extends Audit {
@@ -41,4 +42,13 @@ export class Booking extends Audit {
 
   @Column({ nullable: true })
   payment_reference: string;
+
+  @OneToMany(() => Payment, payment => payment.booking)
+  payments: Payment[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

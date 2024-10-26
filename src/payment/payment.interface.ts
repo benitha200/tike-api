@@ -1,9 +1,17 @@
-export interface IntouchCallback {
-    jsonpayload: {
-      requesttransactionid: string;
-      transactionid: string;
-      responsecode: string;
-      status: string;
-    };
-  }
+// export interface IntouchCallback {
+//   jsonpayload: {
+//     requesttransactionid: string;
+//     status: string;
+//     responsecode: string;
+//     [key: string]: any;
+//   };
+// }
   
+export interface IntouchCallback {
+  jsonpayload: {
+    requesttransactionid: string;
+    status: string;
+    responsecode: string;
+    [key: string]: any;
+  };
+}
