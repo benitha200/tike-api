@@ -489,7 +489,7 @@ export class PaymentService {
         
         console.error('Payment processing error:', error);
         throw new HttpException(
-          'Payment processing failed. Please try again later.',
+          `Payment processing failed. Please try again later. ${this.configService.get<string>('INTOUCH_API_URL')}`,
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
