@@ -396,7 +396,7 @@ export class PaymentService {
         
         console.error('Payment processing error:', error);
         throw new HttpException(
-          `Payment processing failed. Please try again later.`,
+          `Payment processing failed. Please try again later. ${JSON.stringify(paymentRequest, null, 2)}`,
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
