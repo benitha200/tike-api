@@ -161,7 +161,15 @@ export class PaymentController {
     return this.paymentService.findOne(id);
   }
 
-  @ApiOkResponse({ type: Payment })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        payment: { type: 'object', $ref: '#/components/schemas/Payment' },
+        intouchResponse: { type: 'object', nullable: true }
+      }
+    }
+  })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @ApiOperation({ summary: 'Process a new payment for a booking' })
@@ -189,7 +197,7 @@ export class PaymentController {
   async processPayment(
     @Param('bookingId') bookingId: string,
     @Body() paymentData: { amount: number; phoneNumber: string },
-  ): Promise<Payment> {
+  ): Promise<{ payment: Payment; intouchResponse?: any }> {
     return this.paymentService.processPayment(
       bookingId,
       paymentData.amount,
