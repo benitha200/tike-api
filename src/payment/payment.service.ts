@@ -417,7 +417,7 @@ export class PaymentService {
       const requestTransactionId = this.generateRequestTransactionId();
       const paymentRequest: PaymentRequestDto = {
         username: this.configService.get('INTOUCH_USERNAME'),
-        timestamp: this.configService.get('ONTOUCH_TIMESTAMP'),
+        timestamp: this.configService.get('INTOUCH_TIMESTAMP'),
         amount: amount.toString(),
         password: this.configService.get('INTOUCH_PASSWORD'),
         mobilephone: phoneNumber,
