@@ -292,18 +292,27 @@ export class PaymentService {
         transactionid: transactionId
       };
 
-      const response = await lastValueFrom(this.httpService.post(
-        this.configService.get<string>('INTOUCH_STATUS_API_URL'),
-        statusRequest,
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 10000
-        }
-      ));
+      console.log('Status check request:', statusRequest);
 
+      const response = await lastValueFrom(
+        this.httpService.post(
+          this.configService.get<string>('INTOUCH_STATUS_API_URL'),
+          statusRequest,
+          {
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            timeout: 30000, // Increased timeout
+            validateStatus: status => true // Accept any status code
+          }
+        )
+      );
+
+      console.log('Status check response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error checking transaction status:', error);
+      console.error('Error checking transaction status:', error.response?.data || error.message);
       throw new HttpException(
         'Failed to check transaction status',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -327,154 +336,73 @@ export class PaymentService {
           return;
         }
 
-        const transactionId = payment.callbackPayload?.transactionid;
-        if (!transactionId) {
+        if (!payment.callbackPayload?.transactionid) {
+          console.error('No transaction ID found in payment:', payment);
           throw new Error('Transaction ID not found in callback payload');
         }
 
         const statusResponse = await this.checkTransactionStatus(
           payment.requestTransactionId,
-          transactionId
+          payment.callbackPayload.transactionid
         );
 
-        if (statusResponse.success) {
-          // Check for successful payment
-          if (statusResponse.status === 'Successfull' && statusResponse.responsecode === '01') {
-            await this.update(payment.id, {
-              status: PaymentStatus.PAID,
-              responseCode: statusResponse.responsecode,
-              callbackPayload: statusResponse
-            });
-            await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.PAID);
-            return;
-          } 
-          // Check for pending status
-          else if (statusResponse.status === 'Pending' || statusResponse.responsecode === '1000') {
-            attempts++;
-            setTimeout(checkStatus, 30000); // Check again after 30 seconds
-          } 
-          // Handle failure cases
-          else {
-            await this.update(payment.id, {
-              status: PaymentStatus.FAILED,
-              responseCode: statusResponse.responsecode,
-              callbackPayload: statusResponse
-            });
-            await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.FAILED);
-            return;
-          }
-        } else {
-          // Handle API error response
+        console.log('Status check attempt', attempts + 1, 'response:', statusResponse);
+
+        // Check for successful payment - both "Successfull" and "SUCCESS" spellings
+        if (statusResponse.success && 
+            (statusResponse.status === 'Successfull' || statusResponse.status === 'SUCCESS') && 
+            (statusResponse.responsecode === '01' || statusResponse.responsecode === '1000')) {
+          await this.update(payment.id, {
+            status: PaymentStatus.PAID,
+            responseCode: statusResponse.responsecode,
+            callbackPayload: statusResponse
+          });
+          await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.PAID);
+          return;
+        } 
+        // Check for pending status
+        else if (statusResponse.status === 'Pending' || 
+                 statusResponse.responsecode === '1000' || 
+                 statusResponse.responsecode === '02') {
+          attempts++;
+          setTimeout(checkStatus, 30000); // Check again after 30 seconds
+        } 
+        // Handle explicit failure cases
+        else if (statusResponse.status === 'Failed' || 
+                 statusResponse.responsecode === '03' || 
+                 statusResponse.responsecode === '3200') {
+          await this.update(payment.id, {
+            status: PaymentStatus.FAILED,
+            responseCode: statusResponse.responsecode,
+            callbackPayload: statusResponse
+          });
+          await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.FAILED);
+          return;
+        }
+        // Handle other cases as pending
+        else {
           attempts++;
           setTimeout(checkStatus, 30000);
         }
       } catch (error) {
         console.error('Status check error:', error);
         attempts++;
-        setTimeout(checkStatus, 30000);
+        if (attempts >= maxAttempts) {
+          await this.update(payment.id, {
+            status: PaymentStatus.FAILED,
+            responseCode: 'ERROR',
+            callbackPayload: { error: error.message }
+          });
+          await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.FAILED);
+        } else {
+          setTimeout(checkStatus, 30000);
+        }
       }
     };
 
     // Start the status check process
     checkStatus();
   }
-
-  // async checkTransactionStatus(requestTransactionId: string): Promise<any> {
-  //   try {
-  //     const statusRequest = {
-  //       username: this.configService.get<string>('INTOUCH_USERNAME'),
-  //       timestamp: this.configService.get<string>('INTOUCH_TIMESTAMP'),
-  //       password: this.configService.get<string>('INTOUCH_PASSWORD'),
-  //       requesttransactionid: requestTransactionId,
-  //       transactionid: requestTransactionId
-  //     };
-
-  //     const response = await lastValueFrom(this.httpService.post(
-  //       this.configService.get<string>('INTOUCH_STATUS_API_URL'),
-  //       statusRequest,
-  //       {
-  //         headers: { 'Content-Type': 'application/json' },
-  //         timeout: 10000
-  //       }
-  //     ));
-
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error checking transaction status:', error);
-  //     throw new HttpException(
-  //       'Failed to check transaction status',
-  //       HttpStatus.INTERNAL_SERVER_ERROR
-  //     );
-  //   }
-  // }
-
-  // async startStatusCheck(payment: Payment): Promise<void> {
-  //   let attempts = 0;
-  //   const maxAttempts = 20; // Will check for 10 minutes (20 attempts * 30 seconds)
-
-  //   const checkStatus = async () => {
-  //     try {
-  //       if (attempts >= maxAttempts) {
-  //         // Stop checking after max attempts
-  //         await this.update(payment.id, {
-  //           status: PaymentStatus.FAILED,
-  //           responseCode: 'TIMEOUT',
-  //           callbackPayload: { message: 'Status check timeout' }
-  //         });
-  //         await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.FAILED);
-  //         return;
-  //       }
-
-  //       const statusResponse = await this.checkTransactionStatus(payment.requestTransactionId);
-
-  //       if (statusResponse.success) {
-  //         if (statusResponse.status === 'SUCCESS' && statusResponse.responsecode === '1000') {
-  //           // Payment successful
-  //           await this.update(payment.id, {
-  //             status: PaymentStatus.PAID,
-  //             responseCode: statusResponse.responsecode,
-  //             callbackPayload: statusResponse
-  //           });
-  //           await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.PAID);
-  //           return; // Stop checking
-  //         } else if (statusResponse.status === 'Pending') {
-  //           // Continue checking
-  //           attempts++;
-  //           setTimeout(checkStatus, 30000); // Check again after 30 seconds
-  //         } else {
-  //           // Payment failed
-  //           await this.update(payment.id, {
-  //             status: PaymentStatus.FAILED,
-  //             responseCode: statusResponse.responsecode,
-  //             callbackPayload: statusResponse
-  //           });
-  //           await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.FAILED);
-  //           return; // Stop checking
-  //         }
-  //       } else if (statusResponse.responsecode === '3200') {
-  //         // Transaction doesn't exist
-  //         await this.update(payment.id, {
-  //           status: PaymentStatus.FAILED,
-  //           responseCode: statusResponse.responsecode,
-  //           callbackPayload: statusResponse
-  //         });
-  //         await this.bookingService.updatePaymentStatus(payment.bookingId, PaymentStatus.FAILED);
-  //         return; // Stop checking
-  //       } else {
-  //         // Other failure cases
-  //         attempts++;
-  //         setTimeout(checkStatus, 30000); // Check again after 30 seconds
-  //       }
-  //     } catch (error) {
-  //       console.error('Status check error:', error);
-  //       attempts++;
-  //       setTimeout(checkStatus, 30000); // Retry after 30 seconds even on error
-  //     }
-  //   };
-
-  //   // Start the status check process
-  //   checkStatus();
-  // }
 
   async processPayment(
     bookingId: string,
