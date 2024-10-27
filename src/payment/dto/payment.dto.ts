@@ -22,7 +22,7 @@ export interface PaymentRequestDto {
   username: string;
   password: string;
   callbackurl: string;
-  transactionId: string;
+  // transactionId: string;
   requesttransactionid: string;
   timestamp: string;
 }

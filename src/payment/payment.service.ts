@@ -328,13 +328,13 @@ export class PaymentService {
       if (!bookingId || !amount || !phoneNumber) {
         throw new HttpException('Missing required payment parameters', HttpStatus.BAD_REQUEST);
       }
-
+  
       if (amount <= 0) {
         throw new HttpException('Amount must be greater than 0', HttpStatus.BAD_REQUEST);
       }
-
+  
       const booking = await this.findBookingOrThrow(bookingId);
-
+  
       // Check if there's already a pending payment for this booking
       const existingPendingPayment = await this.paymentRepository.findOne({
         where: {
@@ -342,23 +342,22 @@ export class PaymentService {
           status: PaymentStatus.PENDING,
         },
       });
-
+  
       if (existingPendingPayment) {
         throw new HttpException('Pending payment already exists for this booking', HttpStatus.CONFLICT);
       }
-
+  
       const requestTransactionId = this.generateRequestTransactionId();
       const paymentRequest: PaymentRequestDto = {
-        amount: amount.toString(),
-        mobilephone: phoneNumber,
         username: this.configService.get<string>('INTOUCH_USERNAME'),
+        timestamp: this.configService.get<string>('INTOUCH_TIMESTAMP'),
+        amount: amount.toString(),
         password: this.configService.get<string>('INTOUCH_PASSWORD'),
-        callbackurl: `${this.configService.get<string>('BASE_URL')}/payments/callback`,
-        transactionId: requestTransactionId,
+        mobilephone: phoneNumber,
         requesttransactionid: requestTransactionId,
-        timestamp: this.generateTimestamp(),
+        callbackurl: `${this.configService.get<string>('BASE_URL')}/payments/callback`,
       };
-
+  
       const payment = await this.create({
         bookingId,
         amount,
@@ -366,24 +365,24 @@ export class PaymentService {
         requestTransactionId,
         status: PaymentStatus.PENDING,
       });
-
+  
       try {
         const response = await lastValueFrom(this.httpService.post<PaymentResponse>(
           this.configService.get<string>('INTOUCH_API_URL'),
-          paymentRequest,
+          JSON.stringify(paymentRequest),
           { 
             headers: { 'Content-Type': 'application/json' }, 
             timeout: 10000 
           }
         ));
-
+  
         if (response.data?.status !== 'SUCCESS') {
           throw new HttpException(
             response.data?.message || 'Payment initiation failed',
             HttpStatus.BAD_REQUEST
           );
         }
-
+  
         await this.bookingService.updatePaymentStatus(bookingId, PaymentStatus.PENDING);
         return payment;
       } catch (error) {
@@ -396,7 +395,7 @@ export class PaymentService {
         
         console.error('Payment processing error:', error);
         throw new HttpException(
-          `Payment processing failed. Please try again later. ${JSON.stringify(paymentRequest, null, 2)}`,
+          `Payment processing failed. Please try again later. ${JSON.stringify(paymentRequest)}`,
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
