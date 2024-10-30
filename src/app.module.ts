@@ -20,6 +20,7 @@ import { TripModule } from './trip/trip.module';
 import { TravelerModule } from './traveler/traveler.module';
 import { BookingModule } from './booking/booking.module';
 import {PaymentModule} from './payment/payment.module';
+import { EmailService } from './booking/email.service';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import {PaymentModule} from './payment/payment.module';
   controllers: [AppController],
   providers: [
     AppService,
+    EmailService,
     // { provide: APP_GUARD, useClass: LocalAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
