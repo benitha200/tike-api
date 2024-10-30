@@ -21,13 +21,15 @@ import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
 import { Booking } from './entities/booking.entity';
 import { HttpModule } from '@nestjs/axios';
+import { EmailService } from './email.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booking, Trip]),
-    HttpModule,
+    ConfigModule,
   ],
-  exports: [BookingService],
+  exports: [BookingService,EmailService],
   controllers: [BookingController],
   providers: [BookingService],
 })
