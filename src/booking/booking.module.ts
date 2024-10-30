@@ -28,9 +28,10 @@ import { ConfigModule } from '@nestjs/config';
   imports: [
     TypeOrmModule.forFeature([Booking, Trip]),
     ConfigModule,
+    HttpModule,
   ],
   exports: [BookingService,EmailService],
   controllers: [BookingController],
-  providers: [BookingService],
+  providers: [BookingService,EmailService],
 })
 export class BookingModule {}
