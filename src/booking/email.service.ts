@@ -75,17 +75,18 @@ import { Booking } from './entities/booking.entity';
 
 @Injectable()
 export class EmailService {
-  private transporter;
+  private transporter: any;
 
   constructor(private configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
-      port: this.configService.get('SMTP_PORT'),
-      secure: true,
+      port: parseInt(this.configService.get('SMTP_PORT')), // Convert to number
+      secure: false,  // Change to false for port 587
       auth: {
         user: this.configService.get('SMTP_USER'),
         pass: this.configService.get('SMTP_PASSWORD'),
       },
+
     });
   }
 
