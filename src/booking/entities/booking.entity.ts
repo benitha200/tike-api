@@ -3,6 +3,7 @@ import { Payment } from 'src/payment/entities/payment.entity';
 import Audit from 'src/shared/entities/audit.entity';
 import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, ManyToOne, OneToMany,CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('bookings')
@@ -51,4 +52,8 @@ export class Booking extends Audit {
 
   @UpdateDateColumn()
   updatedAt: Date;
-}
+
+  @Column({ nullable: true })
+  @ApiPropertyOptional()
+  seat_number?: string;
+  }

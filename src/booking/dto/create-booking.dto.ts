@@ -30,4 +30,7 @@ export class CreateBookingDto extends InterceptDto {
 
   @ApiPropertyOptional()
   payment_reference: string;
+
+  @ApiPropertyOptional()
+  seat_number?: string;
 }

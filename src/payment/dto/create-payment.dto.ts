@@ -1,15 +1,3 @@
-// // create-payment.dto.ts
-// import { PaymentStatus } from '../entities/payment.entity';
-
-// export class CreatePaymentDto {
-//   bookingId: string;
-//   amount: number;
-//   phoneNumber: string;
-//   requestTransactionId: string;
-//   status: PaymentStatus;
-// }
-
-
 import { IsNotEmpty, IsNumber, IsString, IsUUID, IsEnum } from 'class-validator';
 import { PaymentStatus } from '../entities/payment.entity';
 

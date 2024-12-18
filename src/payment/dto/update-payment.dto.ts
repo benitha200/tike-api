@@ -1,14 +1,3 @@
-// // update-payment.dto.ts
-// import { PaymentStatus } from '../entities/payment.entity';
-
-// export class UpdatePaymentDto {
-//   bookingId?: string;
-//   amount?: number;
-//   phoneNumber?: string;
-//   requestTransactionId?: string;
-//   status?: PaymentStatus;
-// }
-
 import { IsOptional, IsNumber, IsString, IsUUID, IsEnum, IsObject } from 'class-validator';
 import { PaymentStatus } from '../entities/payment.entity';
 
