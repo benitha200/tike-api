@@ -14,11 +14,41 @@ export class TripService {
     private dataSource: DataSource,
   ) {}
 
+  // async create(payload: CreateTripDto): Promise<Trip> {
+  //   const queryRunner = this.dataSource.createQueryRunner();
+  //   await queryRunner.connect();
+  //   await queryRunner.startTransaction();
+
+  //   try {
+  //     let newTrip = new Trip();
+  //     newTrip.idempotency_key = payload.idempotency_key;
+  //     newTrip.departure_location = payload.departure_location;
+  //     newTrip.departure_time = payload.departure_time;
+  //     newTrip.arrival_location = payload.arrival_location;
+  //     newTrip.arrival_time = payload.arrival_time;
+  //     newTrip.price = payload.price;
+  //     newTrip.operator = payload.operator;
+  //     newTrip.car = payload.car;
+  //     newTrip.driver = payload.driver;
+  //     newTrip = await queryRunner.manager.save(newTrip);
+  //     await queryRunner.commitTransaction();
+  //     return newTrip;
+  //   } catch (error) {
+  //     await queryRunner.rollbackTransaction();
+  //     throw new HttpException(
+  //       error.message,
+  //       error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   } finally {
+  //     await queryRunner.release();
+  //   }
+  // }
+
   async create(payload: CreateTripDto): Promise<Trip> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+  
     try {
       let newTrip = new Trip();
       newTrip.idempotency_key = payload.idempotency_key;
@@ -30,6 +60,7 @@ export class TripService {
       newTrip.operator = payload.operator;
       newTrip.car = payload.car;
       newTrip.driver = payload.driver;
+      newTrip.total_seats = payload.total_seats;  // Add this line
       newTrip = await queryRunner.manager.save(newTrip);
       await queryRunner.commitTransaction();
       return newTrip;
