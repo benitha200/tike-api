@@ -46,7 +46,7 @@ export class TripService {
 
   async findAll(intercept: InterceptDto): Promise<Trip[]> {
     try {
-      return await this.tripRepository
+      const trips = await this.tripRepository
         .createQueryBuilder('trips')
         .leftJoinAndSelect('trips.departure_location', 'locations as departure')
         .leftJoinAndSelect('trips.arrival_location', 'locations as arrival')
@@ -54,6 +54,13 @@ export class TripService {
         .leftJoinAndSelect('trips.car', 'cars')
         .leftJoinAndSelect('trips.driver', 'drivers')
         .getMany();
+
+      // Format times for daily schedule
+      return trips.map(trip => ({
+        ...trip,
+        departure_time: new Date(`1970-01-01T${trip.departure_time}`).toLocaleTimeString(),
+        arrival_time: new Date(`1970-01-01T${trip.arrival_time}`).toLocaleTimeString()
+      }));
     } catch (error) {
       throw new HttpException(
         error.message,
@@ -61,6 +68,24 @@ export class TripService {
       );
     }
   }
+
+  // async findAll(intercept: InterceptDto): Promise<Trip[]> {
+  //   try {
+  //     return await this.tripRepository
+  //       .createQueryBuilder('trips')
+  //       .leftJoinAndSelect('trips.departure_location', 'locations as departure')
+  //       .leftJoinAndSelect('trips.arrival_location', 'locations as arrival')
+  //       .leftJoinAndSelect('trips.operator', 'operators')
+  //       .leftJoinAndSelect('trips.car', 'cars')
+  //       .leftJoinAndSelect('trips.driver', 'drivers')
+  //       .getMany();
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       error.message,
+  //       error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   }
+  // }
 
   async findOne(id: string, intercept: InterceptDto): Promise<Trip> {
     try {

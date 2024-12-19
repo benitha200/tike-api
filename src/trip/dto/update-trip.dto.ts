@@ -10,13 +10,16 @@ export class UpdateTripDto extends InterceptDto {
   departure_location: Location;
 
   @ApiPropertyOptional()
-  departure_time: Date;
+  departure_time: String;
 
   @ApiPropertyOptional()
   arrival_location: Location;
 
   @ApiPropertyOptional()
-  arrival_time: Date;
+  arrival_time: String;
+
+  @ApiPropertyOptional()
+  total_seats: number;
 
   @ApiPropertyOptional()
   price: number;

@@ -15,9 +15,9 @@ export class Trip extends Audit {
   })
   departure_location: Location;
 
-  @ApiProperty()
-  @Column()
-  departure_time: Date;
+  // @ApiProperty()
+  // @Column()
+  // departure_time: Date;
 
   @ApiProperty({ type: () => Location })
   @ManyToOne(() => Location, (location) => location.arrival_trips, {
@@ -25,9 +25,21 @@ export class Trip extends Audit {
   })
   arrival_location: Location;
 
+  // @ApiProperty()
+  // @Column()
+  // arrival_time: Date;
+
+  @ApiProperty()
+  @Column({ type: 'time' })
+  departure_time: String; // Store only time
+
+  @ApiProperty()
+  @Column({ type: 'time' })
+  arrival_time: String; // Store only time
+
   @ApiProperty()
   @Column()
-  arrival_time: Date;
+  total_seats: number;
 
   @ApiProperty()
   @Column()

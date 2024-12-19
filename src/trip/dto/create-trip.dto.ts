@@ -17,7 +17,7 @@ export class CreateTripDto extends InterceptDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  departure_time: Date;
+  departure_time: String;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -25,7 +25,11 @@ export class CreateTripDto extends InterceptDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  arrival_time: Date;
+  arrival_time: String;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  total_seats: number;
 
   @ApiProperty()
   @IsNotEmpty()

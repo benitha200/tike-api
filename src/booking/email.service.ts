@@ -22,21 +22,24 @@ export class EmailService {
   }
 
   private getEmailTemplate(booking: Booking): string {
-    const departureTime = new Date(booking.trip.departure_time).toLocaleString();
-    const arrivalTime = new Date(booking.trip.arrival_time).toLocaleString();
+    // const departureTime = new Date(booking.trip.departure_time).toLocaleString();
+    // const arrivalTime = new Date(booking.trip.arrival_time).toLocaleString();
+
+    // In email.service.ts, around line 25-26
+    const departureTime = new Date(String(booking.trip.departure_time)).toLocaleString();
+    const arrivalTime = new Date(String(booking.trip.arrival_time)).toLocaleString();
 
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>${booking.payment_status === 'PAID' ? 'Payment Successful - Your Bus Ticket' : 'Booking Payment Status Update'}</h2>
         <p>Dear ${booking.traveler.fullname},</p>
         
-        ${
-          booking.payment_status === 'PAID'
-            ? `<p>Your payment has been confirmed. Here are your trip details:</p>`
-            : booking.payment_status === 'FAILED'
-            ? `<p>Unfortunately, your payment was unsuccessful. Please try again or contact support for assistance.</p>`
-            : `<p>Your payment is currently pending. We'll update you once it's confirmed.</p>`
-        }
+        ${booking.payment_status === 'PAID'
+        ? `<p>Your payment has been confirmed. Here are your trip details:</p>`
+        : booking.payment_status === 'FAILED'
+          ? `<p>Unfortunately, your payment was unsuccessful. Please try again or contact support for assistance.</p>`
+          : `<p>Your payment is currently pending. We'll update you once it's confirmed.</p>`
+      }
         
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
           <h3>Trip Information</h3>
@@ -51,9 +54,8 @@ export class EmailService {
           <p><strong>Payment Status:</strong> ${booking.payment_status}</p>
         </div>
         
-        ${
-          booking.payment_status === 'PAID'
-            ? `
+        ${booking.payment_status === 'PAID'
+        ? `
             <div style="margin-top: 20px;">
               <p><strong>Important Notes:</strong></p>
               <ul>
@@ -63,8 +65,8 @@ export class EmailService {
               </ul>
             </div>
             `
-            : ''
-        }
+        : ''
+      }
         
         <div style="margin-top: 20px;">
           <p>If you have any questions or concerns, please contact our support team:</p>
@@ -78,12 +80,12 @@ export class EmailService {
   }
 
   async sendPaymentStatusEmail(booking: Booking): Promise<void> {
-    const subject = 
+    const subject =
       booking.payment_status === 'PAID'
         ? `Bus Ticket Confirmation - ${booking.payment_reference}`
         : booking.payment_status === 'FAILED'
-        ? `Payment Failed - ${booking.payment_reference}`
-        : `Payment Pending - ${booking.payment_reference}`;
+          ? `Payment Failed - ${booking.payment_reference}`
+          : `Payment Pending - ${booking.payment_reference}`;
 
     try {
       await this.transporter.sendMail({

@@ -426,6 +426,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { InterceptDto } from '../shared/dto/intercept.dto';
 import { BookingService } from '../booking/booking.service';
+import { Console } from 'console';
 
 @Injectable()
 export class PaymentService {
@@ -456,6 +457,7 @@ export class PaymentService {
     throw new HttpException('Unsupported phone number provider', HttpStatus.BAD_REQUEST);
   }
 
+  // works  but don't update booking
   // async processPayment(
   //   bookingId: string,
   //   amount: number,
@@ -523,20 +525,16 @@ export class PaymentService {
   //         })
   //       );
   
-  //       // Detailed logging for debugging
-  //       console.log('Full Itechpay Response:', JSON.stringify(response, null, 2));
-  
   //       // More comprehensive response handling
   //       const responseData = response.data;
         
-  //       // Check for successful payment scenarios
-  //       if (responseData.status === 200 || 
-  //           (responseData.data && responseData.data.status === 'PENDING') ||
-  //           responseData.success === true) {
+  //       // Success scenarios
+  //       if (responseData.status === 200 && responseData.data) {
   //         await this.paymentRepository.update(payment.id, {
-  //           status: PaymentStatus.PENDING,
-  //           responseCode: responseData.status?.toString() || 'PENDING',
-  //           callbackPayload: responseData
+  //           status: PaymentStatus.PAID,
+  //           responseCode: '200',
+  //           transactionId: responseData.data.transID,
+  //           callbackPayload: responseData // Pass the entire response object
   //         });
   
   //         return {
@@ -545,24 +543,17 @@ export class PaymentService {
   //         };
   //       }
   
-  //       // Check for failure scenarios
-  //       if (responseData.status === 400 || 
-  //           (responseData.data && responseData.data.status === 'FAILED') ||
-  //           responseData.success === false) {
+  //       // Failure scenarios
+  //       if (responseData.status === 400 || responseData.data?.message) {
+  //         const errorMessage = responseData.data?.message || 'Payment processing failed';
           
-  //         // More detailed error logging
-  //         console.error('Payment Failed:', responseData.data?.message || 'Unknown error');
-  
   //         await this.paymentRepository.update(payment.id, {
   //           status: PaymentStatus.FAILED,
-  //           responseCode: responseData.status?.toString() || 'FAILED',
-  //           callbackPayload: responseData
+  //           responseCode: '400',
+  //           callbackPayload: responseData // Pass the entire response object
   //         });
   
-  //         throw new HttpException(
-  //           responseData.data?.message || 'Payment processing failed',
-  //           HttpStatus.BAD_REQUEST
-  //         );
+  //         throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
   //       }
   
   //       // Catch-all for unexpected responses
@@ -572,32 +563,225 @@ export class PaymentService {
   //       );
   
   //     } catch (error) {
-  //       console.error('Payment Processing Error:', error);
+  //       // Safely handle axios errors and other exceptions
+  //       const errorPayload = {
+  //         message: error.message,
+  //         response: error.response?.data,
+  //         stack: error.stack
+  //       };
   
   //       // Update payment status to failed
   //       await this.paymentRepository.update(payment.id, {
   //         status: PaymentStatus.FAILED,
   //         responseCode: 'ERROR',
-  //         callbackPayload: {
-  //           error: error.message,
-  //           originalError: error.toString()
-  //         }
+  //         callbackPayload: errorPayload // Pass error details as an object
   //       });
   
   //       // Throw a more informative error
   //       throw new HttpException(
   //         error.response?.data?.message || 
+  //         error.message || 
   //         'Payment processing encountered an unexpected error',
   //         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR
   //       );
   //     }
   //   } catch (error) {
-  //     console.error('Overall Payment Processing Error:', error);
-  
   //     // Re-throw HttpExceptions, wrap others
   //     if (error instanceof HttpException) {
   //       throw error;
   //     }
+  //     throw new HttpException(
+  //       'Payment processing encountered an unexpected error',
+  //       HttpStatus.INTERNAL_SERVER_ERROR
+  //     );
+  //   }
+  // }
+
+  // async processPayment(
+  //   bookingId: string,
+  //   amount: number,
+  //   phoneNumber: string
+  // ): Promise<{ payment: Payment; itechpayResponse?: any }> {
+  //   try {
+  //     // Validate input parameters
+  //     if (!bookingId || !amount || !phoneNumber) {
+  //       throw new HttpException('Missing required payment parameters', HttpStatus.BAD_REQUEST);
+  //     }
+  
+  //     if (amount <= 0) {
+  //       throw new HttpException('Amount must be greater than 0', HttpStatus.BAD_REQUEST);
+  //     }
+  
+  //     try {
+  //       // Verify booking exists
+  //       const booking = await this.findBookingOrThrow(bookingId);
+  //     } catch (error) {
+  //       throw new HttpException('Invalid booking ID', HttpStatus.BAD_REQUEST);
+  //     }
+  
+  //     // Check for existing pending payment
+  //     try {
+  //       const existingPendingPayment = await this.paymentRepository.findOne({
+  //         where: {
+  //           bookingId,
+  //           status: PaymentStatus.PENDING,
+  //         },
+  //       });
+  
+  //       if (existingPendingPayment) {
+  //         return {
+  //           payment: existingPendingPayment,
+  //           itechpayResponse: {
+  //             status: 'PENDING',
+  //             message: 'Existing pending payment found'
+  //           }
+  //         };
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking pending payment:', error);
+  //       // Continue processing if checking for pending payment fails
+  //     }
+  
+  //     let apiKey: string;
+  //     try {
+  //       // Determine the correct API key based on phone number
+  //       apiKey = this.determineApiKey(phoneNumber);
+  //     } catch (error) {
+  //       throw new HttpException(
+  //         'Failed to process payment: Invalid phone number',
+  //         HttpStatus.BAD_REQUEST
+  //       );
+  //     }
+  
+  //     // Prepare payment request payload
+  //     const paymentPayload = {
+  //       amount,
+  //       phone: phoneNumber,
+  //       key: apiKey
+  //     };
+  
+  //     let payment;
+  //     try {
+  //       // Create initial payment record
+  //       payment = await this.create({
+  //         bookingId,
+  //         amount,
+  //         phoneNumber,
+  //         requestTransactionId: `booking-${bookingId}-${Date.now()}`,
+  //         status: PaymentStatus.PENDING,
+  //       });
+  //     } catch (error) {
+  //       console.error('Error creating payment record:', error);
+  //       throw new HttpException(
+  //         'Failed to initialize payment',
+  //         HttpStatus.INTERNAL_SERVER_ERROR
+  //       );
+  //     }
+  
+  //     try {
+  //       // Send payment request to Itechpay with an extended timeout
+  //       const response = await lastValueFrom(
+  //         this.httpService.post('https://pay.itecpay.rw/api/pay', paymentPayload, {
+  //           headers: { 
+  //             'Content-Type': 'application/json',
+  //             'Accept': 'application/json'
+  //           },
+  //           timeout: 300000, // 5 minutes timeout
+  //         })
+  //       );
+  
+  //       // More comprehensive response handling
+  //       const responseData = response.data;
+  //       console.log("reponse data")
+  //       console.log(responseData.status ===400 && responseData.data);
+        
+  //       // Success scenarios
+  //       if (responseData.status === 200 && responseData.data) {
+  //         await this.paymentRepository.update(payment.id, {
+  //           status: PaymentStatus.PAID,
+  //           responseCode: '200',
+  //           transactionId: responseData.data.transID,
+  //           callbackPayload: responseData
+  //         });
+  
+  //         return {
+  //           payment: await this.findOne(payment.id),
+  //           itechpayResponse: responseData
+  //         };
+  //       }
+  
+  //       // Failure scenarios
+  //       if (parseInt(responseData.status) === 400 || responseData.data?.message) {
+  //         const errorMessage = responseData.data?.message || 'Payment processing failed';
+          
+  //         await this.paymentRepository.update(payment.id, {
+  //           status: PaymentStatus.FAILED,
+  //           responseCode: '400',
+  //           callbackPayload: responseData
+  //         });
+  
+  //         throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
+  //       }
+
+  //       if (responseData.status === 500 || responseData.data?.message) {
+  //         const errorMessage = responseData.data?.message || 'Payment processing failed';
+          
+  //         await this.paymentRepository.update(payment.id, {
+  //           status: PaymentStatus.FAILED,
+  //           responseCode: '500',
+  //           callbackPayload: responseData
+  //         });
+  
+  //         throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
+  //       }
+  
+  //       // Catch-all for unexpected responses
+  //       throw new HttpException(
+  //         'Unexpected payment response',
+  //         HttpStatus.INTERNAL_SERVER_ERROR
+  //       );
+  
+  //     } catch (error) {
+  //       // Handle specific API errors
+  //       if (error.response?.data?.message?.includes('balance')) {
+  //         await this.paymentRepository.update(payment.id, {
+  //           status: PaymentStatus.FAILED,
+  //           responseCode: 'BALANCE_ERROR',
+  //           callbackPayload: error.response.data
+  //         });
+          
+  //         throw new HttpException(
+  //           'Failed to process payment, check your balance and try again',
+  //           HttpStatus.BAD_REQUEST
+  //         );
+  //       }
+  
+  //       // Safely handle other axios errors and exceptions
+  //       const errorPayload = {
+  //         message: error.message,
+  //         response: error.response?.data,
+  //         stack: error.stack
+  //       };
+  
+  //       await this.paymentRepository.update(payment.id, {
+  //         status: PaymentStatus.FAILED,
+  //         responseCode: 'ERROR',
+  //         callbackPayload: errorPayload
+  //       });
+  
+  //       throw new HttpException(
+  //         error.response?.data?.message || 
+  //         error.message || 
+  //         'Payment processing encountered an unexpected error',
+  //         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR
+  //       );
+  //     }
+  //   } catch (error) {
+  //     if (error instanceof HttpException) {
+  //       throw error;
+  //     }
+  //     // Log unexpected errors
+  //     console.error('Unexpected error in processPayment:', error);
   //     throw new HttpException(
   //       'Payment processing encountered an unexpected error',
   //       HttpStatus.INTERNAL_SERVER_ERROR
@@ -620,48 +804,75 @@ export class PaymentService {
         throw new HttpException('Amount must be greater than 0', HttpStatus.BAD_REQUEST);
       }
   
-      // Verify booking exists
-      const booking = await this.findBookingOrThrow(bookingId);
-  
-      // Check for existing pending payment
-      const existingPendingPayment = await this.paymentRepository.findOne({
-        where: {
-          bookingId,
-          status: PaymentStatus.PENDING,
-        },
-      });
-  
-      if (existingPendingPayment) {
-        return {
-          payment: existingPendingPayment,
-          itechpayResponse: {
-            status: 'PENDING',
-            message: 'Existing pending payment found'
-          }
-        };
+      try {
+        // Verify booking exists
+        const booking = await this.findBookingOrThrow(bookingId);
+      } catch (error) {
+        throw new HttpException('Invalid booking ID', HttpStatus.BAD_REQUEST);
       }
   
-      // Determine the correct API key based on phone number
-      const apiKey = this.determineApiKey(phoneNumber);
+      // Check for existing pending payment
+      try {
+        const existingPendingPayment = await this.paymentRepository.findOne({
+          where: {
+            bookingId,
+            status: PaymentStatus.PENDING,
+          },
+        });
   
-      // Prepare payment request payload
+        if (existingPendingPayment) {
+          // Update booking status to PENDING
+          await this.bookingService.updatePaymentStatus(bookingId, 'PENDING');
+          
+          return {
+            payment: existingPendingPayment,
+            itechpayResponse: {
+              status: 'PENDING',
+              message: 'Existing pending payment found'
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Error checking pending payment:', error);
+      }
+  
+      let apiKey: string;
+      try {
+        apiKey = this.determineApiKey(phoneNumber);
+      } catch (error) {
+        throw new HttpException(
+          'Failed to process payment: Invalid phone number',
+          HttpStatus.BAD_REQUEST
+        );
+      }
+  
       const paymentPayload = {
         amount,
         phone: phoneNumber,
         key: apiKey
       };
   
-      // Create initial payment record
-      const payment = await this.create({
-        bookingId,
-        amount,
-        phoneNumber,
-        requestTransactionId: `booking-${bookingId}-${Date.now()}`,
-        status: PaymentStatus.PENDING,
-      });
+      let payment;
+      try {
+        payment = await this.create({
+          bookingId,
+          amount,
+          phoneNumber,
+          requestTransactionId: `booking-${bookingId}-${Date.now()}`,
+          status: PaymentStatus.PENDING,
+        });
+
+        // Update booking status to PENDING when payment is created
+        await this.bookingService.updatePaymentStatus(bookingId, 'PENDING');
+      } catch (error) {
+        console.error('Error creating payment record:', error);
+        throw new HttpException(
+          'Failed to initialize payment',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
   
       try {
-        // Send payment request to Itechpay with an extended timeout
         const response = await lastValueFrom(
           this.httpService.post('https://pay.itecpay.rw/api/pay', paymentPayload, {
             headers: { 
@@ -672,7 +883,6 @@ export class PaymentService {
           })
         );
   
-        // More comprehensive response handling
         const responseData = response.data;
         
         // Success scenarios
@@ -681,8 +891,11 @@ export class PaymentService {
             status: PaymentStatus.PAID,
             responseCode: '200',
             transactionId: responseData.data.transID,
-            callbackPayload: responseData // Pass the entire response object
+            callbackPayload: responseData
           });
+
+          // Update booking status to PAID
+          await this.bookingService.updatePaymentStatus(bookingId, 'PAID');
   
           return {
             payment: await this.findOne(payment.id),
@@ -691,40 +904,73 @@ export class PaymentService {
         }
   
         // Failure scenarios
-        if (responseData.status === 400 || responseData.data?.message) {
+        if (parseInt(responseData.status) === 400 || responseData.data?.message) {
           const errorMessage = responseData.data?.message || 'Payment processing failed';
           
           await this.paymentRepository.update(payment.id, {
             status: PaymentStatus.FAILED,
             responseCode: '400',
-            callbackPayload: responseData // Pass the entire response object
+            callbackPayload: responseData
           });
+
+          // Update booking status to FAILED
+          await this.bookingService.updatePaymentStatus(bookingId, 'FAILED');
+  
+          throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
+        }
+
+        if (responseData.status === 500 || responseData.data?.message) {
+          const errorMessage = responseData.data?.message || 'Payment processing failed';
+          
+          await this.paymentRepository.update(payment.id, {
+            status: PaymentStatus.FAILED,
+            responseCode: '500',
+            callbackPayload: responseData
+          });
+
+          // Update booking status to FAILED
+          await this.bookingService.updatePaymentStatus(bookingId, 'FAILED');
   
           throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
         }
   
-        // Catch-all for unexpected responses
         throw new HttpException(
           'Unexpected payment response',
           HttpStatus.INTERNAL_SERVER_ERROR
         );
   
       } catch (error) {
-        // Safely handle axios errors and other exceptions
+        if (error.response?.data?.message?.includes('balance')) {
+          await this.paymentRepository.update(payment.id, {
+            status: PaymentStatus.FAILED,
+            responseCode: 'BALANCE_ERROR',
+            callbackPayload: error.response.data
+          });
+
+          // Update booking status to FAILED
+          await this.bookingService.updatePaymentStatus(bookingId, 'FAILED');
+          
+          throw new HttpException(
+            'Failed to process payment, check your balance and try again',
+            HttpStatus.BAD_REQUEST
+          );
+        }
+  
         const errorPayload = {
           message: error.message,
           response: error.response?.data,
           stack: error.stack
         };
   
-        // Update payment status to failed
         await this.paymentRepository.update(payment.id, {
           status: PaymentStatus.FAILED,
           responseCode: 'ERROR',
-          callbackPayload: errorPayload // Pass error details as an object
+          callbackPayload: errorPayload
         });
+
+        // Update booking status to FAILED
+        await this.bookingService.updatePaymentStatus(bookingId, 'FAILED');
   
-        // Throw a more informative error
         throw new HttpException(
           error.response?.data?.message || 
           error.message || 
@@ -733,16 +979,18 @@ export class PaymentService {
         );
       }
     } catch (error) {
-      // Re-throw HttpExceptions, wrap others
       if (error instanceof HttpException) {
         throw error;
       }
+      console.error('Unexpected error in processPayment:', error);
       throw new HttpException(
         'Payment processing encountered an unexpected error',
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
+
+
 
   private async findBookingOrThrow(bookingId: string) {
     try {
