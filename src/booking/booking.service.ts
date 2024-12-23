@@ -1,8 +1,29 @@
-// booking.service.ts
+// // booking.service.ts
+// import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+// import { InjectRepository } from '@nestjs/typeorm';
+// import { CreateBookingDto } from './dto/create-booking.dto';
+// import { UpdateBookingDto } from './dto/update-booking.dto';
+// import { Booking } from './entities/booking.entity';
+// import { InterceptDto } from '../shared/dto/intercept.dto';
+// import { Brackets, DataSource, Repository } from 'typeorm';
+// import { Trip } from 'src/trip/entities/trip.entity';
+// import { HttpException, HttpStatus } from '@nestjs/common';
+// import { EmailService } from './email.service';
+
+// @Injectable()
+// export class BookingService {
+//   constructor(
+//     @InjectRepository(Booking)
+//     private readonly bookingRepository: Repository<Booking>,
+//     @InjectRepository(Trip)
+//     private readonly tripRepository: Repository<Trip>,
+//     private dataSource: DataSource,
+//     private readonly emailService: EmailService,
+//   ) { }
+
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto } from './dto/update-booking.dto';
 import { Booking } from './entities/booking.entity';
 import { InterceptDto } from '../shared/dto/intercept.dto';
 import { Brackets, DataSource, Repository } from 'typeorm';
@@ -21,36 +42,65 @@ export class BookingService {
     private readonly emailService: EmailService,
   ) { }
 
+  async create(payload: CreateBookingDto): Promise<Booking> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
+    try {
+      // Validate trip existence
+      const trip = await this.tripRepository.findOne({
+        where: { id: payload.trip.id }
+      });
 
+      if (!trip) {
+        throw new NotFoundException(`Trip with ID ${payload.trip.id} not found`);
+      }
 
+      // Check seat availability
+      if (payload.seat_number) {
+        const bookingDate = payload.trip_date; // Use the provided trip_date
+        const bookedSeats = await this.getBookedSeatsForTrip(payload.trip.id, bookingDate);
+        
+        if (bookedSeats.includes(payload.seat_number)) {
+          throw new HttpException(
+            'This seat is already booked for this date',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
 
-  // async findAll(traveler: string, intercept: InterceptDto): Promise<Booking[]> {
-  //   try {
-  //     return await this.bookingRepository
-  //       .createQueryBuilder('bookings')
-  //       .leftJoinAndSelect('bookings.traveler', 'travelers')
-  //       .leftJoinAndSelect('bookings.trip', 'trips')
-  //       .leftJoinAndSelect('trips.departure_location', 'locations as departure')
-  //       .leftJoinAndSelect('trips.arrival_location', 'locations as arrival')
-  //       .leftJoinAndSelect('trips.operator', 'operators')
-  //       .leftJoinAndSelect('trips.car', 'cars')
-  //       .leftJoinAndSelect('trips.driver', 'drivers')
-  //       .where(
-  //         new Brackets((qb) => {
-  //           if (traveler) {
-  //             qb.where('travelers.id = :traveler', { traveler });
-  //           }
-  //         }),
-  //       )
-  //       .getMany();
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       error.message,
-  //       error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   }
-  // }
+      // Create new booking
+      const newBooking = this.bookingRepository.create({
+        idempotency_key: payload.idempotency_key,
+        is_one_way: payload.is_one_way,
+        notes: payload.notes,
+        trip: payload.trip,
+        price: trip.price,
+        traveler: payload.traveler,
+        seat_number: payload.seat_number,
+        trip_date: payload.trip_date,
+        payment_status: 'PENDING'
+      });
+
+      // Save the booking
+      const savedBooking = await queryRunner.manager.save(newBooking);
+      await queryRunner.commitTransaction();
+
+      return savedBooking;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
 
   async findAll(traveler: string, intercept: InterceptDto): Promise<Booking[]> {
@@ -164,13 +214,12 @@ export class BookingService {
   }
 
   async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
-    // Updated query to properly fetch all booked seats
     const bookings = await this.bookingRepository
       .createQueryBuilder('booking')
       .where('booking.trip = :tripId', { tripId })
-      .andWhere('DATE(booking.createdAt) = :date', { date })
+      .andWhere('booking.trip_date = :date', { date })
       .andWhere('booking.canceled = :canceled', { canceled: false })
-      .andWhere('booking.seat_number IS NOT NULL') // Ensure seat_number exists
+      .andWhere('booking.seat_number IS NOT NULL')
       .getMany();
 
     return bookings.map(booking => booking.seat_number);
@@ -213,54 +262,54 @@ export class BookingService {
     };
   }
 
-  async create(payload: CreateBookingDto): Promise<Booking> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  // async create(payload: CreateBookingDto): Promise<Booking> {
+  //   const queryRunner = this.dataSource.createQueryRunner();
+  //   await queryRunner.connect();
+  //   await queryRunner.startTransaction();
 
-    try {
-      // Now using payload.trip as string (ID)
-      const bookingDate = new Date().toISOString().split('T')[0];
-      const bookedSeats = await this.getBookedSeatsForTrip(payload.trip.id, bookingDate);
+  //   try {
+  //     // Now using payload.trip as string (ID)
+  //     const bookingDate = new Date().toISOString().split('T')[0];
+  //     const bookedSeats = await this.getBookedSeatsForTrip(payload.trip.id, bookingDate);
       
-      if (payload.seat_number && bookedSeats.includes(payload.seat_number)) {
-        throw new HttpException(
-          'This seat is already booked for this date',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+  //     if (payload.seat_number && bookedSeats.includes(payload.seat_number)) {
+  //       throw new HttpException(
+  //         'This seat is already booked for this date',
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
 
-      const trip = await this.tripRepository
-        .createQueryBuilder('trips')
-        .where('trips.id = :id', {
-          id: payload.trip, // This is now correct as it's a string ID
-        })
-        .getOne();
+  //     const trip = await this.tripRepository
+  //       .createQueryBuilder('trips')
+  //       .where('trips.id = :id', {
+  //         id: payload.trip, // This is now correct as it's a string ID
+  //       })
+  //       .getOne();
 
-      const price = trip ? trip.price : 0;
+  //     const price = trip ? trip.price : 0;
 
-      let newBooking = new Booking();
-      newBooking.idempotency_key = payload.idempotency_key;
-      newBooking.is_one_way = payload.is_one_way;
-      newBooking.notes = payload.notes;
-      newBooking.trip = payload.trip;
-      newBooking.price = price;
-      newBooking.traveler = payload.traveler;
-      newBooking.seat_number = payload.seat_number;
+  //     let newBooking = new Booking();
+  //     newBooking.idempotency_key = payload.idempotency_key;
+  //     newBooking.is_one_way = payload.is_one_way;
+  //     newBooking.notes = payload.notes;
+  //     newBooking.trip = payload.trip;
+  //     newBooking.price = price;
+  //     newBooking.traveler = payload.traveler;
+  //     newBooking.seat_number = payload.seat_number;
       
-      newBooking = await queryRunner.manager.save(newBooking);
-      await queryRunner.commitTransaction();
-      return newBooking;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw new HttpException(
-        error.message,
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    } finally {
-      await queryRunner.release();
-    }
-  }
+  //     newBooking = await queryRunner.manager.save(newBooking);
+  //     await queryRunner.commitTransaction();
+  //     return newBooking;
+  //   } catch (error) {
+  //     await queryRunner.rollbackTransaction();
+  //     throw new HttpException(
+  //       error.message,
+  //       error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   } finally {
+  //     await queryRunner.release();
+  //   }
+  // }
 
   // Add new method to check seat availability
  

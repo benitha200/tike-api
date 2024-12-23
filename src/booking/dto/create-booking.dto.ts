@@ -1,5 +1,6 @@
+// create-booking.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsDateString } from 'class-validator';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
@@ -22,8 +23,12 @@ export class CreateBookingDto extends InterceptDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  traveler: Traveler;
+  @IsDateString()
+  trip_date: string; // Changed to string type for ISO date format
 
+  @ApiProperty()
+  @IsNotEmpty()
+  traveler: Traveler;
 
   @ApiPropertyOptional()
   payment_status: string;

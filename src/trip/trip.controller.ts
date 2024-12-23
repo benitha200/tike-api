@@ -23,7 +23,7 @@ import { TripService } from './trip.service';
 @ApiTags('Trips')
 @Controller('trips')
 export class TripController {
-  constructor(private readonly tripService: TripService) {}
+  constructor(private readonly tripService: TripService) { }
 
   @ApiCreatedResponse({ type: Trip })
   @ApiForbiddenResponse({ description: 'Forbidden' })
@@ -72,5 +72,13 @@ export class TripController {
     @Body() intercept: InterceptDto,
   ): Promise<string> {
     return await this.tripService.remove(id, intercept);
+  }
+
+  @ApiOkResponse({ type: Trip, isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @Get('upcoming/:days?')
+  async findUpcoming(@Param('days') days: number = 7): Promise<Trip[]> {
+    return await this.tripService.findUpcoming(days);
   }
 }

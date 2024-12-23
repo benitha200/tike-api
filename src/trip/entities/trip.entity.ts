@@ -66,4 +66,8 @@ export class Trip extends Audit {
   @ApiProperty({ type: () => Booking, isArray: true })
   @OneToMany(() => Booking, (booking) => booking.trip)
   bookings: Booking[];
+
+  @ApiProperty()
+  @Column({ default: true })
+  is_daily: boolean;
 }

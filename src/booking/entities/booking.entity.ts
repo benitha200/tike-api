@@ -1,10 +1,10 @@
+// booking.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { Payment } from 'src/payment/entities/payment.entity';
 import Audit from 'src/shared/entities/audit.entity';
 import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Column, Entity, ManyToOne, OneToMany,CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('bookings')
 export class Booking extends Audit {
@@ -12,7 +12,7 @@ export class Booking extends Audit {
   @Column()
   price: number;
 
-  @ApiProperty({ default: true })
+  @ApiProperty({ default: true }) 
   @Column({ default: true })
   is_one_way: boolean;
 
@@ -26,6 +26,10 @@ export class Booking extends Audit {
   })
   trip: Trip;
 
+  @ApiProperty()
+  @Column()
+  trip_date: String;
+
   @ApiProperty({ type: () => Traveler })
   @ManyToOne(() => Traveler, (traveler) => traveler.bookings, {
     onDelete: 'SET NULL',
@@ -36,10 +40,9 @@ export class Booking extends Audit {
   @Column({ default: false })
   canceled: boolean;
 
-  @ApiProperty({ default: false })
-  @Column({ default: false })
+  @ApiProperty()
+  @Column({ default: 'PENDING' })
   payment_status: string;
-
 
   @Column({ nullable: true })
   payment_reference: string;
@@ -54,6 +57,6 @@ export class Booking extends Audit {
   updatedAt: Date;
 
   @Column({ nullable: true })
-  @ApiPropertyOptional()
+  @ApiProperty()
   seat_number?: string;
-  }
+}

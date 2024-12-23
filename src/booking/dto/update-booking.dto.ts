@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDateString, IsOptional } from 'class-validator';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
@@ -12,6 +13,11 @@ export class UpdateBookingDto extends InterceptDto {
 
   @ApiPropertyOptional()
   trip?: Trip;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  trip_date?: string; 
 
   @ApiPropertyOptional()
   traveler?: Traveler;
