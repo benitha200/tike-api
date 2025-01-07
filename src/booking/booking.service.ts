@@ -30,6 +30,7 @@ import { Brackets, DataSource, Repository } from 'typeorm';
 import { Trip } from 'src/trip/entities/trip.entity';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EmailService } from './email.service';
+import { Console } from 'console';
 
 @Injectable()
 export class BookingService {
@@ -213,54 +214,119 @@ export class BookingService {
     }
   }
 
-  async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
-    const bookings = await this.bookingRepository
-      .createQueryBuilder('booking')
-      .where('booking.trip = :tripId', { tripId })
-      .andWhere('booking.trip_date = :date', { date })
-      .andWhere('booking.canceled = :canceled', { canceled: false })
-      .andWhere('booking.seat_number IS NOT NULL')
-      .getMany();
-
-    return bookings.map(booking => booking.seat_number);
-  }
-
   async getAvailableSeats(tripId: string, date: string) {
+    // Convert the date to ISO format
+    const formattedDate = new Date(date).toISOString();
+
     // Get all possible seats (A1-J4)
     const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     const columns = ['1', '2', '3', '4'];
     const allSeats = rows.flatMap(row => 
       columns.map(col => `${row}${col}`)
     );
-  
+
     // Get all bookings for this trip that aren't cancelled
     const bookings = await this.bookingRepository
       .createQueryBuilder('booking')
       .where('booking.trip = :tripId', { tripId })
+      .andWhere('booking.trip_date = :date', { date: formattedDate })
       .andWhere('booking.canceled = :canceled', { canceled: false })
       .andWhere('booking.seat_number IS NOT NULL')
       .select(['booking.seat_number', 'booking.payment_status'])
       .getMany();
-  
-    // Get all booked seats
-    const bookedSeats = bookings.map(booking => booking.seat_number);
-  
+
+    // Separate seats by payment status
+    const pendingSeats = bookings
+      .filter(booking => booking.payment_status === 'PENDING')
+      .map(booking => booking.seat_number);
+
+    const paidSeats = bookings
+      .filter(booking => booking.payment_status === 'PAID')
+      .map(booking => booking.seat_number);
+
+    // All booked seats (both pending and paid)
+    const bookedSeats = [...pendingSeats, ...paidSeats];
+
+    // Get available seats (all seats minus booked seats)
+    const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat));
+
     // Create payment status object for all booked seats
     const paymentStatus = bookings.reduce((acc, booking) => {
       acc[booking.seat_number] = booking.payment_status;
       return acc;
     }, {} as Record<string, string>);
-  
-    // Get available seats (all seats minus booked seats)
-    const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat));
-  
+
     return {
       total: allSeats.length,
       available: availableSeats,
+      pending: pendingSeats,
+      paid: paidSeats,
       booked: bookedSeats,
       paymentStatus
     };
   }
+
+  async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
+    const formattedDate = new Date(date).toISOString();
+
+    const bookings = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.trip = :tripId', { tripId })
+      .andWhere('booking.trip_date = :date', { date: formattedDate })
+      .andWhere('booking.canceled = :canceled', { canceled: false })
+      .andWhere('booking.seat_number IS NOT NULL')
+      .getMany();
+    return bookings.map(booking => booking.seat_number);
+  }
+
+  // async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
+  //   const bookings = await this.bookingRepository
+  //     .createQueryBuilder('booking')
+  //     .where('booking.trip = :tripId', { tripId })
+  //     .andWhere('booking.trip_date = :date', { date })
+  //     .andWhere('booking.canceled = :canceled', { canceled: false })
+  //     .andWhere('booking.seat_number IS NOT NULL')
+  //     .getMany();
+
+  //   return bookings.map(booking => booking.seat_number);
+  // }
+
+  // async getAvailableSeats(tripId: string, date: string) {
+  //   // Get all possible seats (A1-J4)
+  //   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+  //   const columns = ['1', '2', '3', '4'];
+  //   const allSeats = rows.flatMap(row => 
+  //     columns.map(col => `${row}${col}`)
+  //   );
+  
+  //   // Get all bookings for this trip that aren't cancelled
+  //   const bookings = await this.bookingRepository
+  //     .createQueryBuilder('booking')
+  //     .where('booking.trip = :tripId', { tripId })
+  //     .andWhere('booking.canceled = :canceled', { canceled: false })
+  //     .andWhere('booking.seat_number IS NOT NULL')
+  //     .select(['booking.seat_number', 'booking.payment_status'])
+  //     .getMany();
+  
+  //   // Get all booked seats
+  //   const bookedSeats = bookings.map(booking => booking.seat_number);
+  
+  //   // Create payment status object for all booked seats
+  //   const paymentStatus = bookings.reduce((acc, booking) => {
+  //     acc[booking.seat_number] = booking.payment_status;
+  //     return acc;
+  //   }, {} as Record<string, string>);
+  
+  //   // Get available seats (all seats minus booked seats)
+  //   const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat));
+  
+  //   return {
+  //     total: allSeats.length,
+  //     available: availableSeats,
+  //     booked: bookedSeats,
+  //     paymentStatus
+  //   };
+  // }
 
   // async create(payload: CreateBookingDto): Promise<Booking> {
   //   const queryRunner = this.dataSource.createQueryRunner();
