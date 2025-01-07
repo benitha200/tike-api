@@ -26,8 +26,8 @@ export class EmailService {
     // const arrivalTime = new Date(booking.trip.arrival_time).toLocaleString();
 
     // In email.service.ts, around line 25-26
-    const departureTime = new Date(String(booking.trip.departure_time)).toLocaleString();
-    const arrivalTime = new Date(String(booking.trip.arrival_time)).toLocaleString();
+    // const departureTime = new Date(String(booking.trip.departure_time)).toLocaleString();
+    // const arrivalTime = new Date(String(booking.trip.arrival_time)).toLocaleString();
 
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -46,8 +46,8 @@ export class EmailService {
           <p><strong>Booking Reference:</strong> ${booking.payment_reference}</p>
           <p><strong>From:</strong> ${booking.trip.departure_location.name}</p>
           <p><strong>To:</strong> ${booking.trip.arrival_location.name}</p>
-          <p><strong>Departure:</strong> ${departureTime}</p>
-          <p><strong>Arrival:</strong> ${arrivalTime}</p>
+          <p><strong>Departure:</strong> ${booking.trip.departure_time}</p>
+          <p><strong>Arrival:</strong> ${booking.trip.arrival_time}</p>
           <p><strong>Bus Number:</strong> ${booking.trip.car.car_no}</p>
           <p><strong>Operator:</strong> ${booking.trip.operator.name}</p>
           <p><strong>Amount:</strong> RWF ${booking.price}</p>
