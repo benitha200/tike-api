@@ -24,7 +24,7 @@ export class CreateBookingDto extends InterceptDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsDateString()
-  trip_date: string; // Changed to string type for ISO date format
+  trip_date: string; 
 
   @ApiProperty()
   @IsNotEmpty()

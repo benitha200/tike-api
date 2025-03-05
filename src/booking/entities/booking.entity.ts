@@ -1,4 +1,4 @@
-// booking.entity.ts
+
 import { ApiProperty } from '@nestjs/swagger';
 import { Payment } from 'src/payment/entities/payment.entity';
 import Audit from 'src/shared/entities/audit.entity';

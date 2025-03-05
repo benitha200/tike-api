@@ -1,5 +1,3 @@
-
-// booking.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Trip } from 'src/trip/entities/trip.entity';

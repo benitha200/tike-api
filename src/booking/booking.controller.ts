@@ -78,30 +78,6 @@ export class BookingController {
     return await this.bookingService.updatePaymentStatus(id, updateBookingDto.payment_status);
   }
 
-//   @Get('seats/:tripId')
-//   async getAvailableSeats(
-//     @Param('tripId') tripId: string,
-//     @Query('date') date: string,
-//   ) {
-//     const seatData = await this.bookingService.getAvailableSeats(tripId, date);
-    
-//     return {
-//       payload: {
-//         total: seatData.total,
-//         available: seatData.available,
-//         booked: seatData.booked,
-//         paymentStatus: seatData.paymentStatus
-//       },
-//       metadata: {
-//         statusCode: 200,
-//         message: ['Success'],
-//       },
-//       path: `/bookings/seats/${tripId}`,
-//       timestamp: new Date().toISOString(),
-//     };
-//   }
-// }
-
 @Get('seats/:tripId')
   @ApiOperation({ summary: 'Get available seats for a trip on a specific date' })
   @ApiResponse({ status: 200, description: 'Returns seat availability data' })

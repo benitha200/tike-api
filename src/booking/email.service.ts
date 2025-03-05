@@ -22,12 +22,6 @@ export class EmailService {
   }
 
   private getEmailTemplate(booking: Booking): string {
-    // const departureTime = new Date(booking.trip.departure_time).toLocaleString();
-    // const arrivalTime = new Date(booking.trip.arrival_time).toLocaleString();
-
-    // In email.service.ts, around line 25-26
-    // const departureTime = new Date(String(booking.trip.departure_time)).toLocaleString();
-    // const arrivalTime = new Date(String(booking.trip.arrival_time)).toLocaleString();
 
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
