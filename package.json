@@ -19,9 +19,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "npm run build && npx typeorm -d dist/shared/configs/mysql.config.js",
+    "typeorm": "npm run build && npx typeorm -d dist/src/shared/config/migration.config.js",
     "migration:generate": "npm run typeorm -- migration:generate -n",
-    "migration:run": "npm run typeorm -- migration:run"
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:create": "npx typeorm migration:create "
   },
   "dependencies": {
     "@nestjs/axios": "^3.1.0",
