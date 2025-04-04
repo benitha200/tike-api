@@ -20,7 +20,8 @@ import { TripModule } from './trip/trip.module';
 import { TravelerModule } from './traveler/traveler.module';
 import { BookingModule } from './booking/booking.module';
 import {PaymentModule} from './payment/payment.module';
-
+import { RouteStopsModule } from './route-stop/route-stops.module';
+import { RoutesModule } from './route/routes.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -52,6 +53,8 @@ import {PaymentModule} from './payment/payment.module';
     TravelerModule,
     BookingModule,
     PaymentModule,
+    RouteStopsModule,
+    RoutesModule,
   ],
   controllers: [AppController],
   providers: [
