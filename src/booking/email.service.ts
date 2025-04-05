@@ -44,8 +44,8 @@ export class EmailService {
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
           <h3>Trip Information</h3>
           <p><strong>Booking Reference:</strong> ${booking.payment_reference}</p>
-          <p><strong>From:</strong> ${booking.trip.departure_location.name}</p>
-          <p><strong>To:</strong> ${booking.trip.arrival_location.name}</p>
+          <p><strong>From:</strong> ${booking.trip.route.departure_location.name}</p>
+          <p><strong>To:</strong> ${booking.trip.route.arrival_location.name}</p>
           <p><strong>Departure:</strong> ${booking.trip.departure_time}</p>
           <p><strong>Arrival:</strong> ${booking.trip.arrival_time}</p>
           <p><strong>Bus Number:</strong> ${booking.trip.car.car_no}</p>

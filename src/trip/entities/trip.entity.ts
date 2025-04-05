@@ -2,32 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Booking } from 'src/booking/entities/booking.entity';
 import { Car } from 'src/car/entities/car.entity';
 import { Driver } from 'src/driver/entities/driver.entity';
-import { Location } from 'src/location/entities/location.entity';
 import { Operator } from 'src/operator/entities/operator.entity';
+import { Route } from 'src/route/entities/routes.entity';
 import Audit from 'src/shared/entities/audit.entity';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('trips')
 export class Trip extends Audit {
-  @ApiProperty({ type: () => Location })
-  @ManyToOne(() => Location, (location) => location.departure_trips, {
-    onDelete: 'SET NULL',
-  })
-  departure_location: Location;
-
-  // @ApiProperty()
-  // @Column()
-  // departure_time: Date;
-
-  @ApiProperty({ type: () => Location })
-  @ManyToOne(() => Location, (location) => location.arrival_trips, {
-    onDelete: 'SET NULL',
-  })
-  arrival_location: Location;
-
-  // @ApiProperty()
-  // @Column()
-  // arrival_time: Date;
+  // Removed individual departure_location and arrival_location and price fields
+  // Add a relationship to the Route entity instead
+  @ApiProperty({ type: () => Route })
+  @ManyToOne(() => Route, (route) => route.trips, { onDelete: 'SET NULL' })
+  route: Route;  // Reference to the Route entity
 
   @ApiProperty()
   @Column({ type: 'time' })
@@ -41,9 +27,8 @@ export class Trip extends Audit {
   @Column()
   total_seats: number;
 
-  @ApiProperty()
-  @Column()
-  price: number;
+  // Removed price field from Trip entity
+  // The price will now be fetched from the Route entity
 
   @ApiProperty({ type: () => Operator })
   @ManyToOne(() => Operator, (operator) => operator.trips, {

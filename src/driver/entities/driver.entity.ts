@@ -38,6 +38,6 @@ export class Driver extends Audit {
   emergency_contact_phone_number?: string;
 
   @ApiProperty({ type: () => Trip, isArray: true })
-  @OneToMany(() => Trip, (trips) => trips.arrival_location)
+  @OneToMany(() => Trip, (trips) => trips.driver)
   trips: Trip[];
 }

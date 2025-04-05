@@ -3,7 +3,7 @@ import Audit from 'src/shared/entities/audit.entity';
 import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
 import { Location } from 'src/location/entities/location.entity'; // Stop entity
 import { Column, Entity, OneToMany, ManyToOne } from 'typeorm';
-
+import { Trip } from 'src/trip/entities/trip.entity'; // Adjust the path if different
 @Entity('routes')
 export class Route extends Audit {
     @ApiProperty()
@@ -31,4 +31,7 @@ export class Route extends Audit {
     @ApiProperty({ type: () => RouteStop, isArray: true })
     @OneToMany(() => RouteStop, (routeStop) => routeStop.route)
     routeStops: RouteStop[];
+    
+    @OneToMany(() => Trip, (trip) => trip.route)
+    trips: Trip[];
 }

@@ -77,7 +77,7 @@ export class BookingService {
         is_one_way: payload.is_one_way,
         notes: payload.notes,
         trip: payload.trip,
-        price: trip.price,
+        price: trip.route.total_price,
         traveler: payload.traveler,
         seat_number: payload.seat_number,
         trip_date: payload.trip_date,

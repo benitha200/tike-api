@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 import { Car } from 'src/car/entities/car.entity';
 import { Driver } from 'src/driver/entities/driver.entity';
-import { Location } from 'src/location/entities/location.entity';
 import { Operator } from 'src/operator/entities/operator.entity';
+import { Route } from 'src/route/entities/routes.entity';
 import { InterceptDto } from 'src/shared/dto/intercept.dto';
 
 export class CreateTripDto extends InterceptDto {
@@ -11,17 +11,14 @@ export class CreateTripDto extends InterceptDto {
   @IsNotEmpty()
   idempotency_key: string;
 
+  // Instead of departure_location and arrival_location, reference the route
   @ApiProperty()
   @IsNotEmpty()
-  departure_location: Location;
+  route: Route; // Link to Route entity which provides departure_location, arrival_location, and price
 
   @ApiProperty()
   @IsNotEmpty()
   departure_time: String;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  arrival_location: Location;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -31,9 +28,8 @@ export class CreateTripDto extends InterceptDto {
   @IsNotEmpty()
   total_seats: number;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  price: number;
+  // Removed price, it will be fetched from the Route entity
+  // price: number;
 
   @ApiProperty()
   @IsNotEmpty()
