@@ -26,6 +26,12 @@ export class CreateRouteDto {
   @IsUUID()
   arrival_location: string;
 
+  @IsNumber()
+  total_price: number;
+ 
+   @IsNumber()
+   total_duration: number; // Total duration in minutes
+
   @IsString()
   idempotency_key: string;
 

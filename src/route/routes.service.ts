@@ -26,6 +26,8 @@ export class RoutesService {
     departure_location: string;  // UUID
     arrival_location: string;    // UUID
     idempotency_key: string;
+    total_duration: number;
+    total_price: number;
     routeStops: {
       stopName: string;
       stopOrder: number;
@@ -45,6 +47,9 @@ export class RoutesService {
       newRoute.idempotency_key = payload.idempotency_key;
       newRoute.name = payload.name;
       newRoute.departure_location = departure_location;
+      newRoute.arrival_location = arrival_location;
+      newRoute.total_duration = payload.total_duration;
+      newRoute.total_price = payload.total_price;
       newRoute.arrival_location = arrival_location;
   
       newRoute = await queryRunner.manager.save(newRoute);
@@ -86,16 +91,25 @@ export class RoutesService {
 
   async findOne(id: string): Promise<Route> {
     try {
-      return await this.routesRepository.findOne({
-        where: { id },
-        relations: ['departure_location', 'arrival_location', 'routeStops'],
-      });
-    } catch (error) {
-      throw new HttpException(
-        error.message,
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+        const route = await this.routesRepository.findOne({
+          where: { id },
+          relations: ['departure_location', 'arrival_location', 'routeStops'],
+        });
+
+        if (!route) {
+          throw new HttpException('Route not found', HttpStatus.NOT_FOUND);
+        }
+
+        // Sort routeStops by stopOrder
+        route.routeStops = route.routeStops.sort((a, b) => a.stopOrder - b.stopOrder);
+
+        return route;
+      } catch (error) {
+        throw new HttpException(
+          error.message,
+          error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
   }
 
   async update(id: string, payload: UpdateRouteDto): Promise<string> {
@@ -108,6 +122,7 @@ export class RoutesService {
   
       if (payload.name) {
         updateData.name = payload.name;
+        //updateData.idempotency_key = payload.idempotency_key;
       }
   
       if (payload.departure_location) {
@@ -119,26 +134,28 @@ export class RoutesService {
         const arrivalLocation = await this.stopsRepository.findOneByOrFail({ id: payload.arrival_location });
         updateData.arrival_location = arrivalLocation;
       }
-  
+        // Update total_duration and total_price if provided
+        if (payload.total_duration) {
+            updateData.total_duration = payload.total_duration;
+        }
+        // Update total_price if provided
+        if (payload.total_price) {
+            updateData.total_price = payload.total_price;
+        }
       await queryRunner.manager.update(Route, id, updateData);
   
       if (payload.routeStops) {
         // First delete existing route stops
         await queryRunner.manager.delete(RouteStop, { routeId: id });
   
-        // Add new route stops
-        const routeStops = payload.routeStops.map(stop => {
-          const routeStop = new RouteStop();
-          routeStop.routeId = id;
-          routeStop.stopName = stop.stopName;
-          routeStop.stopOrder = stop.stopOrder;
-          routeStop.duration = stop.duration;
-          routeStop.price = stop.price;
-          return routeStop;
-        });
-  
-        await queryRunner.manager.save(RouteStop, routeStops);
-      }
+        // Save route stops
+        for (const stop of payload.routeStops) {
+            await queryRunner.manager.insert('route_stops', {
+            ...stop,
+            routeId: id,
+            });
+        }
+        }
   
       await queryRunner.commitTransaction();
       return 'Updated Route successfully!';

@@ -1,23 +1,26 @@
-import { IsOptional, IsString, IsUUID, IsArray, ValidateNested, IsNumber, Min } from 'class-validator';
+import { IsOptional, IsString, IsUUID, IsArray, ValidateNested, IsNumber, Min, isNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class UpdateRouteStopDto {
-  @IsString()
-  stopName: string;
+class RouteStopDto {
+    @IsString()
+    stopName: string;
+  
+    @IsNumber()
+    @Min(1)
+    stopOrder: number;
+  
+    @IsNumber()
+    duration: number;
+  
+    @IsNumber()
+    price: number;
+    
 
-  @IsNumber()
-  stopOrder: number;
-
-  @IsNumber()
-  @Min(0)
-  duration: number;
-
-  @IsNumber()
-  @Min(0)
-  price: number;
-}
-
+  idempotency_key: string;
+  
+  }
 export class UpdateRouteDto {
+
   @IsOptional()
   @IsString()
   name?: string;
@@ -30,9 +33,15 @@ export class UpdateRouteDto {
   @IsUUID()
   arrival_location?: string;
 
+  @IsNumber()
+ total_price: number;
+
+  @IsNumber()
+  total_duration: number; // Total duration in minutes
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => UpdateRouteStopDto)
-  routeStops?: UpdateRouteStopDto[];
+  @Type(() => RouteStopDto)
+  routeStops?: RouteStopDto[];
 }

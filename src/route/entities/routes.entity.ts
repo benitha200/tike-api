@@ -18,6 +18,16 @@ export class Route extends Audit {
     @ManyToOne(() => Location)
     arrival_location: Location;
 
+    //newly added
+    @ApiProperty()
+    @Column()
+    total_price: number;
+
+    //newly added
+    @ApiProperty()
+    @Column()
+    total_duration: number; // Total duration in minutes
+
     @ApiProperty({ type: () => RouteStop, isArray: true })
     @OneToMany(() => RouteStop, (routeStop) => routeStop.route)
     routeStops: RouteStop[];

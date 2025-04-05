@@ -2,8 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import Audit from 'src/shared/entities/audit.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
-
 @Entity('locations')
 export class Location extends Audit {
   @ApiProperty()
