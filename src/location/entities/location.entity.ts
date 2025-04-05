@@ -26,6 +26,4 @@ export class Location extends Audit {
   @OneToMany(() => Trip, (trips) => trips.arrival_location)
   arrival_trips: Trip[];
 
-  @OneToMany(() => RouteStop, (routeStop) => routeStop.stop)
-  routeStops: RouteStop[];
 }

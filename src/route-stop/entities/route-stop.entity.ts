@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Route } from 'src/route/entities/routes.entity';
-import { Location as Stop } from 'src/location/entities/location.entity';
 import Audit from 'src/shared/entities/audit.entity';
 
 @Entity('route_stops')
@@ -12,8 +11,8 @@ export class RouteStop extends Audit {
   routeId: string;  // Changed to UUID
 
   @ApiProperty()
-  @Column('uuid')
-  stopId: string;  // Changed to UUID
+  @Column()
+  stopName: string;  // Changed to UUID
 
   @ApiProperty()
   @Column()
@@ -28,8 +27,8 @@ export class RouteStop extends Audit {
   @JoinColumn({ name: 'routeId' })
   route: Route;
 
-  @ApiProperty({ type: () => Location })
-  @ManyToOne(() => Stop, (stop) => stop.routeStops)
-  @JoinColumn({ name: 'stopId' })
-  stop: Stop;
+  @ApiProperty()
+  @Column()
+  price: number;
+  
 }

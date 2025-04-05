@@ -5,28 +5,33 @@ import { RouteStopsService } from './route-stops.service';
 export class RouteStopsController {
   constructor(private readonly routeStopsService: RouteStopsService) {}
 
+  // Create Route Stop - using stopName and price instead of stopId
   @Post()
-  async create(@Body() createRouteStopDto: { routeId: number; stopId: number; stopOrder: number; duration: number }) {
+  async create(@Body() createRouteStopDto: { routeId: string; stopName: string; stopOrder: number; duration: number; price: number }) {
     return await this.routeStopsService.create(createRouteStopDto);
   }
 
+  // Find all Route Stops for a given Route
   @Get('route/:routeId')
-  async findByRoute(@Param('routeId') routeId: number) {
+  async findByRoute(@Param('routeId') routeId: string) {
     return await this.routeStopsService.findByRoute(routeId);
   }
 
+  // Find a specific Route Stop by ID
   @Get(':id')
-  async findOne(@Param('id') id: number) {
+  async findOne(@Param('id') id: string) {
     return await this.routeStopsService.findOne(id);
   }
 
+  // Update a Route Stop
   @Put(':id')
-  async update(@Param('id') id: number, @Body() updateRouteStopDto: { stopId?: number; stopOrder?: number; duration?: number }) {
+  async update(@Param('id') id: string, @Body() updateRouteStopDto: { stopName?: string; stopOrder?: number; duration?: number; price?: number }) {
     return await this.routeStopsService.update(id, updateRouteStopDto);
   }
 
+  // Delete a Route Stop
   @Delete(':id')
-  async remove(@Param('id') id: number) {
+  async remove(@Param('id') id: string) {
     return await this.routeStopsService.remove(id);
   }
 }

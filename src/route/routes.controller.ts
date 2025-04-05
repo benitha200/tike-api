@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { RoutesService } from './routes.service';
 import { Route } from './entities/routes.entity';  // Assuming your route entity is in this path
-import { Location as Stop } from 'src/location/entities/location.entity'; // Stop entity
+import { Location } from 'src/location/entities/location.entity'; // Stop entity
 import { CreateRouteDto } from './dto/create-route.dto'; // Import CreateRouteDto
 
 @Controller('routes')
@@ -30,7 +30,7 @@ export class RoutesController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateRouteDto: { name?: string; originStop?: Stop; terminalStop?: Stop },
+    @Body() updateRouteDto: { name?: string; departure_location?: Location; arrival_location?: Location },
   ): Promise<string> {
     return await this.routesService.update(id, updateRouteDto);
   }

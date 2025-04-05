@@ -16,20 +16,20 @@ export class RoutesService {
         private readonly dataSource: DataSource,
     ) {}
 
-    async create(payload: { name: string; originStop: Location; terminalStop: Location; idempotency_key: string }): Promise<Route> {
+    async create(payload: { name: string; departure_location: Location; arrival_location: Location; idempotency_key: string }): Promise<Route> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-            const originStop = payload.originStop; // Use Stop object directly
-            const terminalStop = payload.terminalStop; // Use Stop object directly
+            const departure_location = payload.departure_location; // Use Stop object directly
+            const arrival_location = payload.arrival_location; // Use Stop object directly
 
             let newRoute = new Route();
             newRoute.idempotency_key = payload.idempotency_key;
             newRoute.name = payload.name;
-            newRoute.originStop = originStop;
-            newRoute.terminalStop = terminalStop;
+            newRoute.departure_location = departure_location;
+            newRoute.arrival_location = arrival_location;
 
             newRoute = await queryRunner.manager.save(newRoute);
             await queryRunner.commitTransaction();
@@ -48,7 +48,7 @@ export class RoutesService {
     async findAll(): Promise<Route[]> {
         try {
             return await this.routesRepository.find({
-                relations: ['originStop', 'terminalStop', 'routeStops'],
+                relations: ['departure_location', 'arrival_location', 'routeStops'],
             });
         } catch (error) {
             throw new HttpException(
@@ -62,7 +62,7 @@ export class RoutesService {
         try {
             return await this.routesRepository.findOne({
                 where: { id },
-                relations: ['originStop', 'terminalStop', 'routeStops'],
+                relations: ['departure_location', 'arrival_location', 'routeStops'],
             });
         } catch (error) {
             throw new HttpException(
@@ -72,7 +72,7 @@ export class RoutesService {
         }
     }
 
-    async update(id: string, payload: { name?: string; originStop?: Location; terminalStop?: Location }): Promise<string> {
+    async update(id: string, payload: { name?: string; departure_location?: Location; arrival_location?: Location }): Promise<string> {
         try {
             const updateData: Partial<Route> = {};
 
@@ -80,12 +80,12 @@ export class RoutesService {
                 updateData.name = payload.name;
             }
 
-            if (payload.originStop) {
-                updateData.originStop = payload.originStop;
+            if (payload.departure_location) {
+                updateData.departure_location = payload.departure_location;
             }
 
-            if (payload.terminalStop) {
-                updateData.terminalStop = payload.terminalStop;
+            if (payload.arrival_location) {
+                updateData.arrival_location = payload.arrival_location;
             }
 
             await this.routesRepository.update(id, updateData);

@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
 import { Route } from 'src/route/entities/routes.entity';
-import { Location as Stop } from 'src/Location/entities/location.entity';
 
 @Injectable()
 export class RouteStopsService {
@@ -12,35 +11,32 @@ export class RouteStopsService {
         private readonly routeStopsRepository: Repository<RouteStop>,
         @InjectRepository(Route)
         private readonly routesRepository: Repository<Route>,
-        @InjectRepository(Stop)
-        private readonly stopsRepository: Repository<Stop>,
         private readonly dataSource: DataSource,
     ) {}
 
-    async create(payload: { routeId: number; stopId: number; stopOrder: number; duration: number }): Promise<RouteStop> {
+    async create(payload: { routeId: string; stopName: string; stopOrder: number; duration: number; price: number }): Promise<RouteStop> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-            const { routeId, stopId, stopOrder, duration } = payload;
+            const { routeId, stopName, stopOrder, duration, price } = payload;
 
-            const route = await this.routesRepository.findOne({ where: { id: String(routeId) } });
+            // Find the route by its ID
+            const route = await this.routesRepository.findOne({ where: { id: routeId } });
             if (!route) {
                 throw new HttpException('Route not found', HttpStatus.NOT_FOUND);
             }
 
-            const stop = await this.stopsRepository.findOne({ where: { id: String(stopId) } });
-            if (!stop) {
-                throw new HttpException('Stop not found', HttpStatus.NOT_FOUND);
-            }
-
+            // Create the RouteStop entity
             let routeStop = new RouteStop();
             routeStop.route = route;
-            routeStop.stop = stop;
+            routeStop.stopName = stopName; // Use stopName directly instead of Stop entity
             routeStop.stopOrder = stopOrder;
             routeStop.duration = duration;
+            routeStop.price = price;
 
+            // Save the new route stop in the database
             routeStop = await queryRunner.manager.save(routeStop);
             await queryRunner.commitTransaction();
             return routeStop;
@@ -55,7 +51,7 @@ export class RouteStopsService {
         }
     }
 
-    async findByRoute(routeId: number): Promise<RouteStop[]> {
+    async findByRoute(routeId: string): Promise<RouteStop[]> {
         try {
             return await this.routeStopsRepository
                 .createQueryBuilder('routeStops')
@@ -70,12 +66,10 @@ export class RouteStopsService {
         }
     }
 
-    async findOne(id: number): Promise<RouteStop> {
+    async findOne(id: string): Promise<RouteStop> {
         try {
             return await this.routeStopsRepository
                 .createQueryBuilder('routeStops')
-                .leftJoinAndSelect('routeStops.route', 'route')
-                .leftJoinAndSelect('routeStops.stop', 'stop')
                 .where('routeStops.id = :id', { id })
                 .getOne();
         } catch (error) {
@@ -86,19 +80,18 @@ export class RouteStopsService {
         }
     }
 
-    async update(id: number, payload: { stopId?: number; stopOrder?: number; duration?: number }): Promise<string> {
-        const { stopId, stopOrder, duration } = payload;
+    async update(id: string, payload: { stopName?: string; stopOrder?: number; duration?: number; price?: number }): Promise<string> {
+        const { stopName, stopOrder, duration, price } = payload;
 
         try {
-            const stop = stopId ? await this.stopsRepository.findOne({ where: { id: String(stopId) } }) : undefined;
-
             await this.routeStopsRepository
                 .createQueryBuilder()
                 .update(RouteStop)
                 .set({
-                    stop: stop ?? undefined,
+                    stopName: stopName ?? undefined,
                     stopOrder: stopOrder ?? undefined,
                     duration: duration ?? undefined,
+                    price: price ?? undefined,
                 })
                 .where('id = :id', { id })
                 .execute();
@@ -112,7 +105,7 @@ export class RouteStopsService {
         }
     }
 
-    async remove(id: number): Promise<string> {
+    async remove(id: string): Promise<string> {
         try {
             await this.routeStopsRepository
                 .createQueryBuilder('routeStops')

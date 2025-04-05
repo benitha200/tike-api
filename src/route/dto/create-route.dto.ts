@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
-import { Location as Stop } from 'src/location/entities/location.entity';  // Import the Stop model
+import { Location } from 'src/location/entities/location.entity';  // Import the Stop model
 
 export class CreateRouteDto {
   @ApiProperty()
@@ -13,13 +13,13 @@ export class CreateRouteDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ type: () => Stop })
+  @ApiProperty({ type: () => Location })
   @IsNotEmpty()
   @IsUUID() // Ensures the ID is a valid UUID
-  originStop: Stop;
+  departure_location: Location;
 
-  @ApiProperty({ type: () => Stop })
+  @ApiProperty({ type: () => Location })
   @IsNotEmpty()
   @IsUUID() // Ensures the ID is a valid UUID
-  terminalStop: Stop;
+  arrival_location: Location;
 }
