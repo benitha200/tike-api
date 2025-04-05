@@ -26,7 +26,7 @@ export class TripService {
       newTrip.idempotency_key = payload.idempotency_key;
       newTrip.route = payload.route;
       newTrip.departure_time = payload.departure_time;
-      newTrip.arrival_time = payload.arrival_time;
+      // newTrip.arrival_time = payload.arrival_time;
       newTrip.operator = payload.operator;
       newTrip.car = payload.car;
       newTrip.driver = payload.driver;
@@ -74,7 +74,7 @@ export class TripService {
           ...trip,
           next_occurrence: trip.is_daily ? nextTripDateTime : null,
           formatted_departure_time: new Date(`1970-01-01T${trip.departure_time}`).toLocaleTimeString(),
-          formatted_arrival_time: new Date(`1970-01-01T${trip.arrival_time}`).toLocaleTimeString()
+          // formatted_arrival_time: new Date(`1970-01-01T${trip.arrival_time}`).toLocaleTimeString()
         };
       });
     } catch (error) {
@@ -113,7 +113,7 @@ export class TripService {
               ...trip,
               scheduled_date: new Date(currentOccurrence),
               formatted_departure_time: new Date(`1970-01-01T${trip.departure_time}`).toLocaleTimeString(),
-              formatted_arrival_time: new Date(`1970-01-01T${trip.arrival_time}`).toLocaleTimeString()
+              // formatted_arrival_time: new Date(`1970-01-01T${trip.arrival_time}`).toLocaleTimeString()
             });
           }
 
@@ -163,7 +163,7 @@ export class TripService {
         .update(Trip)
         .set({
           departure_time,
-          arrival_time,
+          // arrival_time,
           route,
           operator,
           car,

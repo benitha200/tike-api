@@ -19,9 +19,9 @@ export class Trip extends Audit {
   @Column({ type: 'time' })
   departure_time: String; // Store only time
 
-  @ApiProperty()
-  @Column({ type: 'time' })
-  arrival_time: String; // Store only time
+  // @ApiProperty()
+  // @Column({ type: 'time' })
+  // arrival_time: String; // Store only time
 
   @ApiProperty()
   @Column()

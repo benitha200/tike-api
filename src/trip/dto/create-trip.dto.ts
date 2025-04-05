@@ -20,9 +20,9 @@ export class CreateTripDto extends InterceptDto {
   @IsNotEmpty()
   departure_time: String;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  arrival_time: String;
+  // @ApiProperty()
+  // @IsNotEmpty()
+  // arrival_time: String;
 
   @ApiProperty()
   @IsNotEmpty()
