@@ -2,26 +2,35 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Route } from 'src/route/entities/routes.entity';
+import { Location } from 'src/location/entities/location.entity'; // Stop entity
 
 @Injectable()
 export class RoutesService {
     constructor(
         @InjectRepository(Route)
         private readonly routesRepository: Repository<Route>,
+
+        @InjectRepository(Location)
+        private readonly stopsRepository: Repository<Location>,
+
         private readonly dataSource: DataSource,
     ) {}
 
-    async create(payload: { name: string; originStopId: string; terminalStopId: string; idempotency_key: string }): Promise<Route> {
+    async create(payload: { name: string; originStop: Location; terminalStop: Location; idempotency_key: string }): Promise<Route> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
+            const originStop = payload.originStop; // Use Stop object directly
+            const terminalStop = payload.terminalStop; // Use Stop object directly
+
             let newRoute = new Route();
             newRoute.idempotency_key = payload.idempotency_key;
             newRoute.name = payload.name;
-            newRoute.originStopId = payload.originStopId;
-            newRoute.terminalStopId = payload.terminalStopId;
+            newRoute.originStop = originStop;
+            newRoute.terminalStop = terminalStop;
+
             newRoute = await queryRunner.manager.save(newRoute);
             await queryRunner.commitTransaction();
             return newRoute;
@@ -38,9 +47,9 @@ export class RoutesService {
 
     async findAll(): Promise<Route[]> {
         try {
-            return await this.routesRepository
-                .createQueryBuilder('routes')
-                .getMany();
+            return await this.routesRepository.find({
+                relations: ['originStop', 'terminalStop', 'routeStops'],
+            });
         } catch (error) {
             throw new HttpException(
                 error.message,
@@ -49,12 +58,12 @@ export class RoutesService {
         }
     }
 
-    async findOne(id: number): Promise<Route> {
+    async findOne(id: string): Promise<Route> {
         try {
-            return await this.routesRepository
-                .createQueryBuilder('routes')
-                .where('routes.id = :id', { id })
-                .getOne();
+            return await this.routesRepository.findOne({
+                where: { id },
+                relations: ['originStop', 'terminalStop', 'routeStops'],
+            });
         } catch (error) {
             throw new HttpException(
                 error.message,
@@ -63,17 +72,23 @@ export class RoutesService {
         }
     }
 
-    async update(id: number, payload: { name?: string; originStopId?: string; terminalStopId?: string }): Promise<string> {
-        const { name, originStopId, terminalStopId } = payload;
-
+    async update(id: string, payload: { name?: string; originStop?: Location; terminalStop?: Location }): Promise<string> {
         try {
-            await this.routesRepository
-                .createQueryBuilder()
-                .update(Route)
-                .set({ name, originStopId, terminalStopId })
-                .where('id = :id', { id })
-                .execute();
+            const updateData: Partial<Route> = {};
 
+            if (payload.name) {
+                updateData.name = payload.name;
+            }
+
+            if (payload.originStop) {
+                updateData.originStop = payload.originStop;
+            }
+
+            if (payload.terminalStop) {
+                updateData.terminalStop = payload.terminalStop;
+            }
+
+            await this.routesRepository.update(id, updateData);
             return 'Updated Route successfully!';
         } catch (error) {
             throw new HttpException(
@@ -83,14 +98,9 @@ export class RoutesService {
         }
     }
 
-    async remove(id: number): Promise<string> {
+    async remove(id: string): Promise<string> {
         try {
-            await this.routesRepository
-                .createQueryBuilder('routes')
-                .softDelete()
-                .where('id = :id', { id })
-                .execute();
-
+            await this.routesRepository.softDelete(id);
             return 'Route deleted successfully!';
         } catch (error) {
             throw new HttpException(
