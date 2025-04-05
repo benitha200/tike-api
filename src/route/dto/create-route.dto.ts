@@ -1,25 +1,36 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
-import { Location } from 'src/location/entities/location.entity';  // Import the Stop model
+import { IsString, IsUUID, ValidateNested, IsArray, IsNumber, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class RouteStopDto {
+  @IsString()
+  stopName: string;
+
+  @IsNumber()
+  @Min(1)
+  stopOrder: number;
+
+  @IsNumber()
+  duration: number;
+
+  @IsNumber()
+  price: number;
+}
 
 export class CreateRouteDto {
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  idempotency_key: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
   @IsString()
   name: string;
 
-  @ApiProperty({ type: () => Location })
-  @IsNotEmpty()
-  @IsUUID() // Ensures the ID is a valid UUID
-  departure_location: Location;
+  @IsUUID()
+  departure_location: string;
 
-  @ApiProperty({ type: () => Location })
-  @IsNotEmpty()
-  @IsUUID() // Ensures the ID is a valid UUID
-  arrival_location: Location;
+  @IsUUID()
+  arrival_location: string;
+
+  @IsString()
+  idempotency_key: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RouteStopDto)
+  routeStops: RouteStopDto[];
 }
