@@ -7,8 +7,6 @@ export class UpdateTripEntityWithRouteFields1675702575744 implements MigrationIn
     // Drop the foreign key constraints for `departure_location` and `arrival_location`
     await queryRunner.query(`
       ALTER TABLE \`trips\`
-      DROP FOREIGN KEY \`FK_departure_location\`,
-      DROP FOREIGN KEY \`FK_arrival_location\`;
     `);
 
     // Drop the `departure_location` and `arrival_location` columns
@@ -59,8 +57,6 @@ export class UpdateTripEntityWithRouteFields1675702575744 implements MigrationIn
 
     await queryRunner.query(`
       ALTER TABLE \`trips\`
-      ADD CONSTRAINT \`FK_departure_location\` FOREIGN KEY (\`departure_location\`) REFERENCES \`locations\`(\`id\`) ON DELETE SET NULL,
-      ADD CONSTRAINT \`FK_arrival_location\` FOREIGN KEY (\`arrival_location\`) REFERENCES \`locations\`(\`id\`) ON DELETE SET NULL;
     `);
 
     // Re-add the `price` column
