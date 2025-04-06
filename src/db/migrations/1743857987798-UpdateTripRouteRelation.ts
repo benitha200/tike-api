@@ -53,8 +53,8 @@ export class UpdateTripEntityWithRouteFields1743857987798 implements MigrationIn
     // Re-add the `departure_location` and `arrival_location` columns and their foreign key constraints
     await queryRunner.query(`
       ALTER TABLE \`trips\`
-      ADD \`departure_location\` CHAR(36),
-      ADD \`arrival_location\` CHAR(36);
+      ADD \`departureLocationId\` CHAR(36),
+      ADD \`arrivalLocationId\` CHAR(36);
     `);
 
     await queryRunner.query(`
