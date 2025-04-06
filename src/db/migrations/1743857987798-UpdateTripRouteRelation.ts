@@ -4,17 +4,7 @@ export class UpdateTripEntityWithRouteFields1675702575744 implements MigrationIn
   name = 'UpdateTripEntityWithRouteFields1675702575744';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Drop the foreign key constraints for `departure_location` and `arrival_location`
-    await queryRunner.query(`
-      ALTER TABLE \`trips\`
-    `);
 
-    // Drop the `departure_location` and `arrival_location` columns
-    await queryRunner.query(`
-      ALTER TABLE \`trips\`
-      DROP COLUMN \`departure_location\`,
-      DROP COLUMN \`arrival_location\`;
-    `);
 
     // Add the `route` column to the `trips` table
     await queryRunner.query(`
@@ -48,16 +38,6 @@ export class UpdateTripEntityWithRouteFields1675702575744 implements MigrationIn
       DROP COLUMN \`route\`;
     `);
 
-    // Re-add the `departure_location` and `arrival_location` columns and their foreign key constraints
-    await queryRunner.query(`
-      ALTER TABLE \`trips\`
-      ADD \`departure_location\` CHAR(36),
-      ADD \`arrival_location\` CHAR(36);
-    `);
-
-    await queryRunner.query(`
-      ALTER TABLE \`trips\`
-    `);
 
     // Re-add the `price` column
     await queryRunner.query(`
