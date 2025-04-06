@@ -41,7 +41,7 @@ import { RoutesModule } from './route/routes.module';
     TypeOrmModule.forRoot(databaseConfig),
     ThrottlerModule.forRoot({
       ttl: 60,
-      limit: 10,
+      limit: 100,
     }),
     AuthModule,
     UsersModule,
