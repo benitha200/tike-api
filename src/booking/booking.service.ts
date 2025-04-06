@@ -180,8 +180,6 @@ export class BookingService {
         .createQueryBuilder('bookings')
         .leftJoinAndSelect('bookings.traveler', 'travelers')
         .leftJoinAndSelect('bookings.trip', 'trips')
-        .leftJoinAndSelect('trips.departure_location', 'locations as departure')
-        .leftJoinAndSelect('trips.arrival_location', 'locations as arrival')
         .leftJoinAndSelect('trips.operator', 'operators')
         .leftJoinAndSelect('trips.car', 'cars')
         .leftJoinAndSelect('trips.driver', 'drivers')
