@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm"
 
 export class UpdateBookingTableAddingMoreDetails1743952594366 implements MigrationInterface {
-    name = '1743952594366-UpdateBookingTableAddingMoreDetails'
+    name = 'UpdateBookingTableAddingMoreDetails1743952594366'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`

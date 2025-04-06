@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class UpdateTripEntityWithRouteFields1675702575744 implements MigrationInterface {
-  name = '1743857987798-UpdateTripRouteRelation';
+export class UpdateTripEntityWithRouteFields1743857987798 implements MigrationInterface {
+  name = 'UpdateTripEntityWithRouteFields1743857987798';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Drop the foreign key constraints for `departure_location` and `arrival_location`
