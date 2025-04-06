@@ -9,10 +9,12 @@ import { Booking } from './entities/booking.entity';
 import { HttpModule } from '@nestjs/axios';
 import { EmailService } from './email.service';
 import { ConfigModule } from '@nestjs/config';
+import { Route } from 'src/route/entities/routes.entity';
+import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Trip]),
+    TypeOrmModule.forFeature([Booking, Trip,Route,RouteStop]),
     ConfigModule,
     HttpModule,
   ],

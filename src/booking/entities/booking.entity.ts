@@ -5,6 +5,10 @@ import Audit from 'src/shared/entities/audit.entity';
 import { Traveler } from 'src/traveler/entities/traveler.entity';
 import { Trip } from 'src/trip/entities/trip.entity';
 import { Column, Entity, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Route } from 'src/route/entities/routes.entity';
+import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
+import { JoinColumn } from 'typeorm';
+import { IsNotEmpty } from 'class-validator';
 
 @Entity('bookings')
 export class Booking extends Audit {
@@ -59,4 +63,53 @@ export class Booking extends Audit {
   @Column({ nullable: true })
   @ApiProperty()
   seat_number?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  routeId?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  inStopId?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  outStopId?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  routeName?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  inStopName?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  outStopName?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  departure_time?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  arrival_time?: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  arrival_date?: string;
+
+  @ManyToOne(() => Route, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'routeId' })
+  route?: Route;
+
+  @ManyToOne(() => RouteStop, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'inStopId' })
+  inStop?: RouteStop;
+
+  @ManyToOne(() => RouteStop, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'outStopId' })
+  outStop?: RouteStop;
+
 }

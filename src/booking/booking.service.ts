@@ -31,6 +31,9 @@ import { Trip } from 'src/trip/entities/trip.entity';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { Console } from 'console';
+import { Route } from 'src/route/entities/routes.entity';
+import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
+
 
 @Injectable()
 export class BookingService {
@@ -39,6 +42,10 @@ export class BookingService {
     private readonly bookingRepository: Repository<Booking>,
     @InjectRepository(Trip)
     private readonly tripRepository: Repository<Trip>,
+    @InjectRepository(Route)
+    private readonly routeRepository: Repository<Route>,
+    @InjectRepository(RouteStop)
+    private readonly routeStopRepository: Repository<RouteStop>,
     private dataSource: DataSource,
     private readonly emailService: EmailService,
   ) { }
@@ -47,12 +54,33 @@ export class BookingService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+    
     try {
-      // Validate trip existence
+      // Validate trip existence and populate trip.route
+      console.log('Trip ID:', payload.trip);
+      
       const trip = await this.tripRepository.findOne({
-        where: { id: payload.trip.id }
+        where: { id: payload.trip.id },
+        relations: ['route', 'route.routeStops']
       });
+     const instop= await this.routeStopRepository.findOne({
+        where: { id: payload.instop , routeId: trip.route.id }
+      });
+      const outstop =  await this.routeStopRepository.findOne({
+        where: { id: payload.outstop, routeId: trip.route.id }
+      }) ;
+
+
+      console.log('In-stop:', instop);
+      console.log('In-stop ID:', payload.instop);
+      console.log('Out-stop:', outstop);
+      console.log('Out-stop ID:', payload.outstop);
+      if (!instop) {
+        throw new NotFoundException(`In-stop with ID ${payload.instop} not found in the trip's route`);
+      }
+      if (outstop && !outstop) {
+        throw new NotFoundException(`Out-stop with ID ${payload.outstop} not found in the trip's route`);
+      }
 
       if (!trip) {
         throw new NotFoundException(`Trip with ID ${payload.trip.id} not found`);
@@ -71,16 +99,30 @@ export class BookingService {
         }
       }
 
+      
+      
       // Create new booking
       const newBooking = this.bookingRepository.create({
         idempotency_key: payload.idempotency_key,
         is_one_way: payload.is_one_way,
         notes: payload.notes,
         trip: payload.trip,
-        price: trip.route.total_price,
+        route: trip.route,
+        routeId: trip.route.id,
+        routeName: trip.route.name,
+        inStop: instop,
+        inStopId:  instop?.id,
+        inStopName: instop?.stopName,
+        outStop:outstop,
+        outStopId: outstop?.id,
+        outStopName: outstop?.stopName,
+        price: calculatePrice(trip, instop, outstop),
         traveler: payload.traveler,
         seat_number: payload.seat_number,
         trip_date: payload.trip_date,
+        departure_time: calculateStopArrivalTime(trip, instop),
+        arrival_time: calculateStopArrivalTime(trip, outstop),
+        arrival_date: calculateStopArrivalDate(trip,payload.trip_date,instop, outstop),
         payment_status: 'PENDING'
       });
 
@@ -279,104 +321,84 @@ export class BookingService {
     return bookings.map(booking => booking.seat_number);
   }
 
-  // async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
-  //   const bookings = await this.bookingRepository
-  //     .createQueryBuilder('booking')
-  //     .where('booking.trip = :tripId', { tripId })
-  //     .andWhere('booking.trip_date = :date', { date })
-  //     .andWhere('booking.canceled = :canceled', { canceled: false })
-  //     .andWhere('booking.seat_number IS NOT NULL')
-  //     .getMany();
+}
 
-  //   return bookings.map(booking => booking.seat_number);
-  // }
+// Utility functions
+// These functions are used to calculate the price and arrival times for the booking
 
-  // async getAvailableSeats(tripId: string, date: string) {
-  //   // Get all possible seats (A1-J4)
-  //   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-  //   const columns = ['1', '2', '3', '4'];
-  //   const allSeats = rows.flatMap(row => 
-  //     columns.map(col => `${row}${col}`)
-  //   );
-  
-  //   // Get all bookings for this trip that aren't cancelled
-  //   const bookings = await this.bookingRepository
-  //     .createQueryBuilder('booking')
-  //     .where('booking.trip = :tripId', { tripId })
-  //     .andWhere('booking.canceled = :canceled', { canceled: false })
-  //     .andWhere('booking.seat_number IS NOT NULL')
-  //     .select(['booking.seat_number', 'booking.payment_status'])
-  //     .getMany();
-  
-  //   // Get all booked seats
-  //   const bookedSeats = bookings.map(booking => booking.seat_number);
-  
-  //   // Create payment status object for all booked seats
-  //   const paymentStatus = bookings.reduce((acc, booking) => {
-  //     acc[booking.seat_number] = booking.payment_status;
-  //     return acc;
-  //   }, {} as Record<string, string>);
-  
-  //   // Get available seats (all seats minus booked seats)
-  //   const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat));
-  
-  //   return {
-  //     total: allSeats.length,
-  //     available: availableSeats,
-  //     booked: bookedSeats,
-  //     paymentStatus
-  //   };
-  // }
+function calculatePrice(trip: Trip, instop: RouteStop, outstop: RouteStop): number {
+  if (!trip || !instop || !outstop) {
+    throw new Error('Trip, instop, and outstop must be provided to calculate the price.');
+  }
 
-  // async create(payload: CreateBookingDto): Promise<Booking> {
-  //   const queryRunner = this.dataSource.createQueryRunner();
-  //   await queryRunner.connect();
-  //   await queryRunner.startTransaction();
+  // Ensure the route stops are part of the trip's route
+  const routeStops = trip.route?.routeStops || [];
+  const inStopIndex = routeStops.findIndex(stop => stop.id === instop.id);
+  const outStopIndex = routeStops.findIndex(stop => stop.id === outstop.id);
 
-  //   try {
-  //     // Now using payload.trip as string (ID)
-  //     const bookingDate = new Date().toISOString().split('T')[0];
-  //     const bookedSeats = await this.getBookedSeatsForTrip(payload.trip.id, bookingDate);
-      
-  //     if (payload.seat_number && bookedSeats.includes(payload.seat_number)) {
-  //       throw new HttpException(
-  //         'This seat is already booked for this date',
-  //         HttpStatus.BAD_REQUEST,
-  //       );
-  //     }
+  if (inStopIndex === -1 || outStopIndex === -1) {
+    throw new Error('Invalid instop or outstop for the given trip route.');
+  }
 
-  //     const trip = await this.tripRepository
-  //       .createQueryBuilder('trips')
-  //       .where('trips.id = :id', {
-  //         id: payload.trip, // This is now correct as it's a string ID
-  //       })
-  //       .getOne();
+  if (inStopIndex >= outStopIndex) {
+    throw new Error('Outstop must come after instop on the route.');
+  }
 
-  //     const price = trip ? trip.price : 0;
+  // Calculate the price based on the difference between the stops' prices
+  const inStopPrice = instop.price || 0;
+  const outStopPrice = outstop.price || 0;
 
-  //     let newBooking = new Booking();
-  //     newBooking.idempotency_key = payload.idempotency_key;
-  //     newBooking.is_one_way = payload.is_one_way;
-  //     newBooking.notes = payload.notes;
-  //     newBooking.trip = payload.trip;
-  //     newBooking.price = price;
-  //     newBooking.traveler = payload.traveler;
-  //     newBooking.seat_number = payload.seat_number;
-      
-  //     newBooking = await queryRunner.manager.save(newBooking);
-  //     await queryRunner.commitTransaction();
-  //     return newBooking;
-  //   } catch (error) {
-  //     await queryRunner.rollbackTransaction();
-  //     throw new HttpException(
-  //       error.message,
-  //       error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   } finally {
-  //     await queryRunner.release();
-  //   }
-  // }
+  if (inStopPrice === 0 || outStopPrice === 0) {
+    // If one of the stops is not present, return the route's total price
+    return trip.route?.total_price || 0;
+  }
 
-  // Add new method to check seat availability
- 
+  return Math.abs(outStopPrice - inStopPrice);
+}
+
+function calculateStopArrivalTime(trip: Trip, stop: RouteStop): string {
+  const departure = new Date(`1970-01-01T${trip.departure_time}`);
+  const stopOrder = stop.stopOrder;
+
+  let totalDuration = 0;
+  for (let i = 0; i < stopOrder; i++) {
+    const previousStop = trip.route.routeStops.find(s => s.stopOrder === i);
+    if (previousStop) {
+      totalDuration += previousStop.duration;
+    }
+  }
+
+  departure.setMinutes(departure.getMinutes() + totalDuration + stop.duration);
+  const arrivalTimeStr = `${String(departure.getHours()).padStart(2, '0')}:${String(departure.getMinutes()).padStart(2, '0')}`;
+  return arrivalTimeStr;
+}
+function calculateStopArrivalDate(trip: Trip, trip_date: string, instop: RouteStop, outstop?: RouteStop): string {
+  const tripStartDate = new Date(trip_date); // Use the provided trip_date directly
+  const routeStops = trip.route.routeStops || [];
+
+  let totalDuration = 0;
+
+  // Calculate the total duration up to the instop
+  for (let i = 0; i < instop.stopOrder; i++) {
+    const stop = routeStops.find(s => s.stopOrder === i);
+    if (stop) {
+      totalDuration += stop.duration;
+    }
+  }
+
+  // If outstop is provided, add the duration from instop to outstop
+  if (outstop) {
+    for (let i = instop.stopOrder; i < outstop.stopOrder; i++) {
+      const stop = routeStops.find(s => s.stopOrder === i);
+      if (stop) {
+        totalDuration += stop.duration;
+      }
+    }
+  }
+
+  // Add the total duration to the trip start date
+  tripStartDate.setMinutes(tripStartDate.getMinutes() + totalDuration);
+
+  // Return only the date part in YYYY-MM-DD format
+  return tripStartDate.toISOString().split('T')[0];
 }
