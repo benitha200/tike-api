@@ -14,8 +14,8 @@ export class UpdateTripEntityWithRouteFields1743857987798 implements MigrationIn
     // Drop the `departure_location` and `arrival_location` columns
     await queryRunner.query(`
       ALTER TABLE \`trips\`
-      DROP COLUMN \`departure_location\`,
-      DROP COLUMN \`arrival_location\`;
+      DROP COLUMN \`departureLocationId\`,
+      DROP COLUMN \`arrivalLocationId\`;
     `);
 
     // Add the `route` column to the `trips` table
