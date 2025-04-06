@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AddTotalPriceAndDurationToRoute1743850841975 implements MigrationInterface {
+  name = "1743850841975-AddTotalPriceAndDurationToRoute";
+
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(

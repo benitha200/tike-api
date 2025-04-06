@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class CreateTheRoutesStopsTable1743822529267 implements MigrationInterface {
-    name = 'CreateTheRoutesStopsTable1743822529267'
+    name = '1743822529267-CreateTheRoutesStopsTable'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE \`routes\` (\`id\` varchar(36) NOT NULL, \`idempotency_key\` varchar(255) NOT NULL, \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updated_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), \`deleted_at\` datetime(6) NULL, \`name\` varchar(255) NOT NULL, \`departureLocationId\` varchar(36) NULL, \`arrivalLocationId\` varchar(36) NULL, UNIQUE INDEX \`IDX_d72bb5cc0c39876eb759abe97c\` (\`idempotency_key\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
