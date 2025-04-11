@@ -336,9 +336,9 @@ function calculatePrice(trip: Trip, instop: RouteStop, outstop: RouteStop): numb
     throw new Error('Invalid instop or outstop for the given trip route.');
   }
 
-  if (inStopIndex >= outStopIndex) {
-    throw new Error('Outstop must come after instop on the route.');
-  }
+  // if (inStopIndex >= outStopIndex) {
+  //   throw new Error('Outstop must come after instop on the route.');
+  // }
 
   // Calculate the price based on the difference between the stops' prices
   const inStopPrice = instop.price || 0;
