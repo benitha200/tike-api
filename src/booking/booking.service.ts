@@ -322,18 +322,6 @@ async getAvailableSeats(
   };
 }
 
-  // async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
-  //   const formattedDate = new Date(date).toISOString();
-
-  //   const bookings = await this.bookingRepository
-  //     .createQueryBuilder('booking')
-  //     .where('booking.trip = :tripId', { tripId })
-  //     .andWhere('booking.trip_date = :date', { date: formattedDate })
-  //     .andWhere('booking.canceled = :canceled', { canceled: false })
-  //     .andWhere('booking.seat_number IS NOT NULL')
-  //     .getMany();
-  //   return bookings.map(booking => booking.seat_number);
-  // }
 
   async getBookedSeatsForTripWithStops(
     tripId: string,
