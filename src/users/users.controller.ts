@@ -23,17 +23,33 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiOkResponse({ type: [User], isArray: true })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @Get()
+  async findAll(): Promise<User[]> {
+    return await this.usersService.findAll();
+  }
+
   @ApiOkResponse({ type: User })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @Get(':id')
-  async myProfile(
-    @Param('id') id: string,
-    @Body() intercept: InterceptDto,
-    @Query('shelf') shelf?: string,
-  ): Promise<User> {
-    return await this.usersService.myProfile(id, intercept, shelf);
+  async findOne(@Param('id') id: string): Promise<User> {
+    return await this.usersService.findOne(id);
   }
+
+  // @ApiOkResponse({ type: User })
+  // @ApiForbiddenResponse({ description: 'Forbidden' })
+  // @ApiBadRequestResponse({ description: 'Bad Request' })
+  // @Get(':id')
+  // async myProfile(
+  //   @Param('id') id: string,
+  //   @Body() intercept: InterceptDto,
+  //   @Query('shelf') shelf?: string,
+  // ): Promise<User> {
+  //   return await this.usersService.myProfile(id, intercept, shelf);
+  // }
 
   @ApiOkResponse({ type: User })
   @ApiForbiddenResponse({ description: 'Forbidden' })

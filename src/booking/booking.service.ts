@@ -57,24 +57,19 @@ export class BookingService {
     
     try {
       // Validate trip existence and populate trip.route
-      console.log('Trip ID:', payload.trip);
-      
+      const tripId = String(payload.trip);
       const trip = await this.tripRepository.findOne({
-        where: { id: payload.trip.id },
+        where: { id: tripId },
         relations: ['route', 'route.routeStops']
       });
+
      const instop= await this.routeStopRepository.findOne({
-        where: { id: payload.instop , routeId: trip.route.id }
+        where: { id: payload.instop }
       });
       const outstop =  await this.routeStopRepository.findOne({
-        where: { id: payload.outstop, routeId: trip.route.id }
+        where: { id: payload.outstop }
       }) ;
-
-
-      console.log('In-stop:', instop);
-      console.log('In-stop ID:', payload.instop);
-      console.log('Out-stop:', outstop);
-      console.log('Out-stop ID:', payload.outstop);
+      
       if (!instop) {
         throw new NotFoundException(`In-stop with ID ${payload.instop} not found in the trip's route`);
       }
@@ -89,7 +84,7 @@ export class BookingService {
       // Check seat availability
       if (payload.seat_number) {
         const bookingDate = payload.trip_date; // Use the provided trip_date
-        const bookedSeats = await this.getBookedSeatsForTrip(payload.trip.id, bookingDate);
+        const bookedSeats = await this.getBookedSeatsForTripWithStops(payload.trip.id, bookingDate,instop.id, outstop?.id);
         
         if (bookedSeats.includes(payload.seat_number)) {
           throw new HttpException(
@@ -252,70 +247,138 @@ export class BookingService {
     }
   }
 
-  async getAvailableSeats(tripId: string, date: string) {
-    // Convert the date to ISO format
-    const formattedDate = new Date(date).toISOString();
+async getAvailableSeats(
+  tripId: string,
+  date: string,
+  newInStopId: string,
+  newOutStopId: string,
+) {
+  const formattedDate = new Date(date).toISOString();
 
-    // Get all possible seats (A1-J4)
-    const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    const columns = ['1', '2', '3', '4'];
-    const allSeats = rows.flatMap(row => 
-      columns.map(col => `${row}${col}`)
-    );
+  // All possible seats (A1–J4)
+  const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+  const columns = ['1', '2', '3', '4'];
+  const allSeats = rows.flatMap(row => columns.map(col => `${row}${col}`));
 
-    // Get all bookings for this trip that aren't cancelled
-    const bookings = await this.bookingRepository
-      .createQueryBuilder('booking')
-      .where('booking.trip = :tripId', { tripId })
-      .andWhere('booking.trip_date = :date', { date: formattedDate })
-      .andWhere('booking.canceled = :canceled', { canceled: false })
-      .andWhere('booking.seat_number IS NOT NULL')
-      .select(['booking.seat_number', 'booking.payment_status'])
-      .getMany();
+  // Get stopOrder for the new segment
+  const newInStop = await this.routeStopRepository.findOneOrFail({ where: { id: newInStopId } });
+  const newOutStop = await this.routeStopRepository.findOneOrFail({ where: { id: newOutStopId } });
 
-    // Separate seats by payment status
-    const pendingSeats = bookings
-      .filter(booking => booking.payment_status === 'PENDING')
-      .map(booking => booking.seat_number);
+  const newStartOrder = newInStop.stopOrder;
+  const newEndOrder = newOutStop.stopOrder;
 
-    const paidSeats = bookings
-      .filter(booking => booking.payment_status === 'PAID')
-      .map(booking => booking.seat_number);
-
-    // All booked seats (both pending and paid)
-    const bookedSeats = [...pendingSeats, ...paidSeats];
-
-    // Get available seats (all seats minus booked seats)
-    const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat));
-
-    // Create payment status object for all booked seats
-    const paymentStatus = bookings.reduce((acc, booking) => {
-      acc[booking.seat_number] = booking.payment_status;
-      return acc;
-    }, {} as Record<string, string>);
-
-    return {
-      total: allSeats.length,
-      available: availableSeats,
-      pending: pendingSeats,
-      paid: paidSeats,
-      booked: bookedSeats,
-      paymentStatus
-    };
+  if (newStartOrder >= newEndOrder) {
+    throw new Error('Invalid stop order: inStop must come before outStop.');
   }
 
-  async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
-    const formattedDate = new Date(date).toISOString();
+  // Get all relevant bookings with stop info from route_stops
+  const bookings = await this.bookingRepository
+    .createQueryBuilder('booking')
+    .leftJoinAndSelect('booking.inStop', 'inStop') // both are route_stops
+    .leftJoinAndSelect('booking.outStop', 'outStop')
+    .where('booking.trip = :tripId', { tripId })
+    .andWhere('booking.trip_date = :date', { date: formattedDate })
+    .andWhere('booking.canceled = false')
+    .andWhere('booking.seat_number IS NOT NULL')
+    .select([
+      'booking.seat_number',
+      'booking.payment_status',
+      'inStop.stopOrder',
+      'outStop.stopOrder',
+    ])
+    .getMany();
 
+  // Filter bookings that overlap with the new segment
+  const overlappingBookings = bookings.filter(booking => {
+    const bStart = booking.inStop.stopOrder;
+    const bEnd = booking.outStop.stopOrder;
+    return newStartOrder < bEnd && bStart < newEndOrder;
+  });
+
+  const pendingSeats = overlappingBookings
+    .filter(booking => booking.payment_status === 'PENDING')
+    .map(booking => booking.seat_number);
+
+  const paidSeats = overlappingBookings
+    .filter(booking => booking.payment_status === 'PAID')
+    .map(booking => booking.seat_number);
+
+  const bookedSeats = [...pendingSeats, ...paidSeats];
+
+  const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat));
+
+  const paymentStatus = overlappingBookings.reduce((acc, booking) => {
+    acc[booking.seat_number] = booking.payment_status;
+    return acc;
+  }, {} as Record<string, string>);
+
+  return {
+    total: allSeats.length,
+    available: availableSeats,
+    pending: pendingSeats,
+    paid: paidSeats,
+    booked: bookedSeats,
+    paymentStatus
+  };
+}
+
+  // async getBookedSeatsForTrip(tripId: string, date: string): Promise<string[]> {
+  //   const formattedDate = new Date(date).toISOString();
+
+  //   const bookings = await this.bookingRepository
+  //     .createQueryBuilder('booking')
+  //     .where('booking.trip = :tripId', { tripId })
+  //     .andWhere('booking.trip_date = :date', { date: formattedDate })
+  //     .andWhere('booking.canceled = :canceled', { canceled: false })
+  //     .andWhere('booking.seat_number IS NOT NULL')
+  //     .getMany();
+  //   return bookings.map(booking => booking.seat_number);
+  // }
+
+  async getBookedSeatsForTripWithStops(
+    tripId: string,
+    date: string,
+    newInstopId: string,
+    newOutstopId: string,
+  ): Promise<string[]> {
+    const formattedDate = new Date(date).toISOString();
+  
+    // First, fetch stop orders of new booking
+    const newInstop = await this.routeStopRepository.findOneOrFail({ where: { id: newInstopId } });
+    const newOutstop = await this.routeStopRepository.findOneOrFail({ where: { id: newOutstopId } });
+  
+    const newStartOrder = newInstop.stopOrder;
+    const newEndOrder = newOutstop.stopOrder;
+  
+    // Make sure newStartOrder < newEndOrder
+    if (newStartOrder >= newEndOrder) throw new Error('Invalid stop order');
+  
+    // Fetch bookings with stops
     const bookings = await this.bookingRepository
       .createQueryBuilder('booking')
+      .leftJoinAndSelect('booking.inStop', 'inStop') // both are route_stops
+      .leftJoinAndSelect('booking.outStop', 'outStop')
       .where('booking.trip = :tripId', { tripId })
       .andWhere('booking.trip_date = :date', { date: formattedDate })
-      .andWhere('booking.canceled = :canceled', { canceled: false })
+      .andWhere('booking.canceled = false')
       .andWhere('booking.seat_number IS NOT NULL')
       .getMany();
-    return bookings.map(booking => booking.seat_number);
+      console.log('Bookings:', bookings.toString());
+  
+    // Filter bookings where the segments overlap
+    const overlappingSeats = bookings
+      .filter(booking => {
+        const bStart = booking.inStop.stopOrder;
+        const bEnd = booking.outStop.stopOrder;
+  
+        // Check for overlap: A < D && C < B
+        return newStartOrder < bEnd && bStart < newEndOrder;
+      })
+      .map(booking => booking.seat_number);
+  
+    return overlappingSeats;
   }
+  
 
 }
 
@@ -326,7 +389,12 @@ function calculatePrice(trip: Trip, instop: RouteStop, outstop: RouteStop): numb
   if (!trip || !instop || !outstop) {
     throw new Error('Trip, instop, and outstop must be provided to calculate the price.');
   }
-
+  
+  console.log('Trip:', trip.id);
+  console.log('Trip Route:', trip.route);
+  console.log('Trip Route Stops:', trip.route?.routeStops);
+  console.log('In-stop:', instop);
+  console.log('Out-stop:', outstop);
   // Ensure the route stops are part of the trip's route
   const routeStops = trip.route?.routeStops || [];
   const inStopIndex = routeStops.findIndex(stop => stop.id === instop.id);

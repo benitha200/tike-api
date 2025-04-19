@@ -101,6 +101,7 @@ export class AuthService {
     payload: RegisterRequestDto,
     type: string,
   ): Promise<AuthResponseDto> {
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -134,6 +135,7 @@ export class AuthService {
       newUserInfo.password = await bcrypt.hash(payload.password, 10);
       type == 'traveler' ? (newUserInfo.traveler = newTraveler) : null;
       newUserInfo = await queryRunner.manager.save(newUserInfo);
+      if(payload.role) newUserInfo.role= payload.role;
 
       await queryRunner.commitTransaction();
 

@@ -108,9 +108,13 @@ export class BookingController {
   async getAvailableSeats(
     @Param('tripId') tripId: string,
     @Query('date') date: string,
+    @Query('instopid') inStopId: string,
+    @Query('outstopid') outStopId: string,
   ) {
-    const seatData = await this.bookingService.getAvailableSeats(tripId, date);
+    console.log('tripId:', tripId);
     
+    const seatData = await this.bookingService.getAvailableSeats(tripId, date, inStopId, outStopId);
+
     return {
       payload: {
         total: seatData.total,

@@ -25,6 +25,43 @@ export class UsersService {
     private dataSource: DataSource,
   ) {}
 
+  async findAll(): Promise<User[]> {
+    try {
+      const users = await this.userRepository
+        .createQueryBuilder('users')
+        .leftJoinAndSelect('users.operator', 'operators')
+        .getMany();
+
+      return users;
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async findOne(id: string): Promise<User> {
+    try {
+      const user = await this.userRepository
+        .createQueryBuilder('users')
+        .leftJoinAndSelect('users.operator', 'operators')
+        .where('users.id = :id', { id })
+        .getOne();
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      return user;
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  
   async myProfile(
     id: string,
     intercept: InterceptDto,
@@ -56,29 +93,13 @@ export class UsersService {
     const {
       fullname,
       identifier,
-      password,
-      nationality,
-      dob,
-      gender,
-      phone_number,
-      email,
-      tax_id,
-      emergency_contact_name,
-      emergency_contact_email,
-      emergency_contact_phone_number,
-      operator_code,
+      role,
     } = payload;
-    if (id !== payload.user.id) {
-      throw new UnauthorizedException('You are not allowed to edit this user!');
-    }
+    // if (id !== payload.user.id) {
+    //   throw new UnauthorizedException('You are not allowed to edit this user!');
+    // }
 
-    let operator = null;
-    if (operator_code) {
-      operator = await this.operatorRepository
-        .createQueryBuilder('operators')
-        .where('code = :operator_code', { operator_code })
-        .getOne();
-    }
+     
 
     try {
       await this.userRepository
@@ -87,31 +108,12 @@ export class UsersService {
         .set({
           identifier,
           fullname,
-          password,
-          operator,
+          role,
         })
         .where('id = :id', { id })
         .execute();
 
-      if (payload.user.traveler) {
-        await this.travelerRepository
-          .createQueryBuilder()
-          .update(Traveler)
-          .set({
-            fullname,
-            nationality,
-            dob,
-            gender,
-            phone_number,
-            email,
-            tax_id,
-            emergency_contact_name,
-            emergency_contact_email,
-            emergency_contact_phone_number,
-          })
-          .where('id = :id', { id })
-          .execute();
-      }
+      
 
       return 'Profile updated successfully!';
     } catch (error) {
