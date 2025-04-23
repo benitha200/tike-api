@@ -33,7 +33,7 @@ import { EmailService } from './email.service';
 import { Console } from 'console';
 import { Route } from 'src/route/entities/routes.entity';
 import { RouteStop } from 'src/route-stop/entities/route-stop.entity';
-
+import { BookingExpirationService } from './booking-expiration/booking-expiration.service';
 
 @Injectable()
 export class BookingService {
@@ -48,6 +48,7 @@ export class BookingService {
     private readonly routeStopRepository: Repository<RouteStop>,
     private dataSource: DataSource,
     private readonly emailService: EmailService,
+    private readonly bookingExpirationService: BookingExpirationService 
   ) { }
 
   async create(payload: CreateBookingDto): Promise<Booking> {
@@ -124,6 +125,7 @@ export class BookingService {
       // Save the booking
       const savedBooking = await queryRunner.manager.save(newBooking);
       await queryRunner.commitTransaction();
+      this.bookingExpirationService.createBookingExpirationJob(savedBooking.id);
 
       return savedBooking;
     } catch (error) {
@@ -378,11 +380,6 @@ function calculatePrice(trip: Trip, instop: RouteStop, outstop: RouteStop): numb
     throw new Error('Trip, instop, and outstop must be provided to calculate the price.');
   }
   
-  console.log('Trip:', trip.id);
-  console.log('Trip Route:', trip.route);
-  console.log('Trip Route Stops:', trip.route?.routeStops);
-  console.log('In-stop:', instop);
-  console.log('Out-stop:', outstop);
   // Ensure the route stops are part of the trip's route
   const routeStops = trip.route?.routeStops || [];
   const inStopIndex = routeStops.findIndex(stop => stop.id === instop.id);

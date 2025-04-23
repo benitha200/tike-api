@@ -22,6 +22,7 @@ import { BookingModule } from './booking/booking.module';
 import {PaymentModule} from './payment/payment.module';
 import { RouteStopsModule } from './route-stop/route-stops.module';
 import { RoutesModule } from './route/routes.module';
+import { BullModule } from '@nestjs/bull';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -43,6 +44,13 @@ import { RoutesModule } from './route/routes.module';
       ttl: 60,
       limit: 100,
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        url: `redis://${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
+      }),
+    }),
     AuthModule,
     UsersModule,
     OperatorModule,
@@ -60,7 +68,7 @@ import { RoutesModule } from './route/routes.module';
   providers: [
     AppService,
     // { provide: APP_GUARD, useClass: LocalAuthGuard },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard }, 
   ],
 })
 export class AppModule {}
