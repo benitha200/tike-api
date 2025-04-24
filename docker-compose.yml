@@ -17,11 +17,11 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: GjhkjgYUIKnlninYIYi^7
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '3306:3306'
+      - '${DB_PORT}:${DB_PORT}'
     volumes:
       - mysql-data:/var/lib/mysql
       - ./tike_dump.sql:/docker-entrypoint-initdb.d/tike_dump.sql  # Mount the dump file
