@@ -21,7 +21,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '${DB_PORT}:${DB_PORT}'
+      - '3306:3306'
     volumes:
       - mysql-data:/var/lib/mysql
       - ./tike_dump.sql:/docker-entrypoint-initdb.d/tike_dump.sql  # Mount the dump file
