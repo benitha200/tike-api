@@ -368,8 +368,27 @@ async getAvailableSeats(
   
     return overlappingSeats;
   }
-  
 
+  async findByTravelerPhone(phone: string): Promise<Booking[]> {
+    try {
+      return await this.bookingRepository
+        .createQueryBuilder('bookings')
+        .leftJoinAndSelect('bookings.traveler', 'travelers')
+        .leftJoinAndSelect('bookings.trip', 'trips')
+        .leftJoinAndSelect('trips.operator', 'operators')
+        .leftJoinAndSelect('trips.car', 'cars')
+        .leftJoinAndSelect('trips.driver', 'drivers')
+        .where('travelers.phone_number = :phone', { phone })
+        .andWhere('bookings.payment_status = :status', { status: 'PAID' })
+        .orderBy('bookings.createdAt', 'DESC')
+        .getMany();
+    } catch (error) {
+      throw new HttpException(
+        error.message,
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
 
 // Utility functions

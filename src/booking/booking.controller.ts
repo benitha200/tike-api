@@ -130,4 +130,11 @@ export class BookingController {
       timestamp: new Date().toISOString(),
     };
   }
+
+  @ApiOkResponse({ type: Booking, isArray: true })
+  @ApiOperation({ summary: 'Get bookings by traveler phone number' })
+  @Get('/check-ticket/:phone')
+  async getBookingsByPhone(@Param('phone') phone: string) {
+    return await this.bookingService.findByTravelerPhone(phone);
+  }
 }

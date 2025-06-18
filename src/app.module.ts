@@ -49,7 +49,20 @@ import { BullModule } from '@nestjs/bull';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         url: `redis://${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
+        redis: {
+          maxRetriesPerRequest: 1, // fail fast
+          enableReadyCheck: false, // don't wait for Redis to be ready
+          retryStrategy: (times: number) => {
+            if (times > 2) {
+              console.error('Redis connection failed, continuing without queue features.');
+              return null; // stop retrying
+            }
+            return Math.min(times * 50, 2000);
+          },
+        },
       }),
+      // Add error handling for Redis connection
+      // Bull will not crash the app if Redis is down
     }),
     AuthModule,
     UsersModule,
